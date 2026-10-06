@@ -296,11 +296,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                       final type = (item['category_type'] ?? '').toString();
                       final pic = (item['cat_pic'] ?? '').toString();
 
+                      final itemKey = docId.isNotEmpty ? docId : id;
+
                       return GestureDetector(
+                        key: ValueKey(itemKey),
                         onTap: () {
-                          AuthService().linkCategoryWithRestaurant(
-                            categoryId: docId.isNotEmpty ? docId : id,
-                            categoryName: name,
+                          _editCategory(
+                            id: itemKey,
+                            currentName: name,
+                            currentType: type,
+                            currentPic: pic,
                           );
                         },
                         child: CategoryCard(
@@ -308,12 +313,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           type: type,
                           imageUrl: pic,
                           onEdit: () => _editCategory(
-                            id: docId.isNotEmpty ? docId : id,
+                            id: itemKey,
                             currentName: name,
                             currentType: type,
                             currentPic: pic,
                           ),
-                          onDelete: () => _deleteCategory(docId.isNotEmpty ? docId : id, name),
+                          onDelete: () => _deleteCategory(itemKey, name),
                         ),
                       );
                     },

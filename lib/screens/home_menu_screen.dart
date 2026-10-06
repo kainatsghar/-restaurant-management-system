@@ -624,6 +624,7 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
                                           _selectedCategoryName == name));
 
                               return GestureDetector(
+                                key: ValueKey(docId),
                                 onTap: () {
                                   final bool willDeselect = isSelected;
                                   setState(() {
@@ -640,14 +641,6 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
                                       };
                                     }
                                   });
-
-                                  // Link category ID with restaurant and add restaurant key to category in Firestore
-                                  if (!willDeselect) {
-                                    AuthService().linkCategoryWithRestaurant(
-                                      categoryId: docId,
-                                      categoryName: name,
-                                    );
-                                  }
                                 },
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
