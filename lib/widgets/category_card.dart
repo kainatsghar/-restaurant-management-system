@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import 'app_network_image.dart';
 
 class CategoryCard extends StatelessWidget {
   final String name;
@@ -17,62 +17,6 @@ class CategoryCard extends StatelessWidget {
     required this.onEdit,
     required this.onDelete,
   });
-
-  Widget _buildImage(String url) {
-    if (url.isEmpty) {
-      return _fallbackImage();
-    }
-
-    if (!url.startsWith('http')) {
-      final file = File(url);
-      if (file.existsSync()) {
-        return Image.file(
-          file,
-          width: double.infinity,
-          height: double.infinity,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _fallbackImage(),
-        );
-      }
-    }
-
-    return Image.network(
-      url,
-      width: double.infinity,
-      height: double.infinity,
-      fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => _fallbackImage(),
-      loadingBuilder: (context, child, progress) {
-        if (progress == null) return child;
-        return Container(
-          color: const Color(0xFFF1F5F2),
-          child: const Center(
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: AppColors.primaryPink,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _fallbackImage() {
-    return Container(
-      color: const Color(0xFFEBF2EE),
-      child: const Center(
-        child: Icon(
-          Icons.fastfood_rounded,
-          color: AppColors.textMuted,
-          size: 34,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -95,11 +39,13 @@ class CategoryCard extends StatelessWidget {
           children: [
             // Category Image at Top
             Expanded(
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: _buildImage(imageUrl),
+              child: SizedBox(
+                width: double.infinity,
+                child: AppNetworkImage(
+                  imageUrl: imageUrl,
+                  borderRadius: 12,
+                  fit: BoxFit.cover,
+                  fallbackIcon: Icons.fastfood_rounded,
                 ),
               ),
             ),

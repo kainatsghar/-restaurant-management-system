@@ -1,11 +1,11 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
+import '../services/image_service.dart';
 
 class AddItemScreen extends StatefulWidget {
   final String? initialCategoryId;
@@ -136,38 +136,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
 
   Future<String> _uploadImage(String timestamp) async {
     if (_pickedImage == null) return '';
-
-    final metadata = SettableMetadata(contentType: 'image/jpeg');
-
-    // 1. Try default Firebase Storage bucket (.firebasestorage.app)
-    try {
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('items')
-          .child('$timestamp.jpg');
-      final snapshot = await storageRef.putFile(_pickedImage!, metadata);
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      if (downloadUrl.isNotEmpty) return downloadUrl;
-    } catch (e) {
-      debugPrint('Default storage bucket upload error: $e');
-    }
-
-    // 2. Try explicit legacy appspot bucket (.appspot.com)
-    try {
-      final storageRef = FirebaseStorage.instanceFor(
-              bucket: 'fooddeliveryapp-fb8c1.appspot.com')
-          .ref()
-          .child('items')
-          .child('$timestamp.jpg');
-      final snapshot = await storageRef.putFile(_pickedImage!, metadata);
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      if (downloadUrl.isNotEmpty) return downloadUrl;
-    } catch (e) {
-      debugPrint('Appspot storage bucket upload error: $e');
-    }
-
-    // 3. Fallback to local file path if Cloud Storage is uninitialized
-    return _pickedImage!.path;
+    return await ImageService().uploadOrEncodeImage(
+      imageFile: _pickedImage!,
+      folder: 'items',
+      fileName: timestamp,
+    );
   }
 
   void _showCategoryPicker() {

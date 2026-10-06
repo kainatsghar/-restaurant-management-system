@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
+import '../widgets/app_network_image.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import 'item_detail_screen.dart';
 import 'login_screen.dart';
@@ -83,124 +83,24 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
     required double height,
     required double borderRadius,
   }) {
-    if (url.trim().isEmpty) {
-      return _buildFallbackImage(width, height, borderRadius);
-    }
-
-    if (!url.startsWith('http')) {
-      final file = File(url);
-      if (file.existsSync()) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(borderRadius),
-          child: Image.file(
-            file,
-            width: width,
-            height: height,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                _buildFallbackImage(width, height, borderRadius),
-          ),
-        );
-      }
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: Image.network(
-        url,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-          return Container(
-            width: width,
-            height: height,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F2),
-              borderRadius: BorderRadius.circular(borderRadius),
-            ),
-            child: const Center(
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.primaryPink,
-                ),
-              ),
-            ),
-          );
-        },
-        errorBuilder: (_, __, ___) =>
-            _buildFallbackImage(width, height, borderRadius),
-      ),
-    );
-  }
-
-  Widget _buildFallbackImage(double width, double height, double borderRadius) {
-    return Container(
+    return AppNetworkImage(
+      imageUrl: url,
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5E6E8),
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.storefront_rounded,
-          color: AppColors.primaryPink,
-          size: 38,
-        ),
-      ),
+      borderRadius: borderRadius,
+      fit: BoxFit.cover,
+      fallbackIcon: Icons.storefront_rounded,
     );
   }
 
   Widget _buildDishImage(String url) {
-    if (url.trim().isEmpty) {
-      return Container(
-        color: const Color(0xFFF7F3EE),
-        child: const Center(
-          child: Icon(
-            Icons.restaurant_rounded,
-            color: AppColors.primaryPink,
-            size: 28,
-          ),
-        ),
-      );
-    }
-    if (!url.startsWith('http')) {
-      final file = File(url);
-      if (file.existsSync()) {
-        return Image.file(
-          file,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
-            color: const Color(0xFFF7F3EE),
-            child: const Center(
-              child: Icon(
-                Icons.restaurant_rounded,
-                color: AppColors.primaryPink,
-                size: 28,
-              ),
-            ),
-          ),
-        );
-      }
-    }
-    return Image.network(
-      url,
+    return AppNetworkImage(
+      imageUrl: url,
+      width: double.infinity,
+      height: double.infinity,
+      borderRadius: 0,
       fit: BoxFit.cover,
-      errorBuilder: (_, __, ___) => Container(
-        color: const Color(0xFFF7F3EE),
-        child: const Center(
-          child: Icon(
-            Icons.restaurant_rounded,
-            color: AppColors.primaryPink,
-            size: 28,
-          ),
-        ),
-      ),
+      fallbackIcon: Icons.restaurant_rounded,
     );
   }
 

@@ -1,8 +1,8 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../widgets/app_network_image.dart';
 
 class ItemDetailScreen extends StatefulWidget {
   final String itemId;
@@ -149,62 +149,12 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
   }
 
   Widget _buildImage(String url, {required double width, required double height}) {
-    if (url.trim().isEmpty) {
-      return _buildFallbackImage(width, height);
-    }
-
-    if (!url.startsWith('http')) {
-      final file = File(url);
-      if (file.existsSync()) {
-        return Image.file(
-          file,
-          width: width,
-          height: height,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildFallbackImage(width, height),
-        );
-      }
-    }
-
-    return Image.network(
-      url,
+    return AppNetworkImage(
+      imageUrl: url,
       width: width,
       height: height,
       fit: BoxFit.cover,
-      loadingBuilder: (context, child, progress) {
-        if (progress == null) return child;
-        return Container(
-          width: width,
-          height: height,
-          color: const Color(0xFFF1F5F2),
-          child: const Center(
-            child: SizedBox(
-              width: 28,
-              height: 28,
-              child: CircularProgressIndicator(
-                strokeWidth: 2.5,
-                color: AppColors.primaryPink,
-              ),
-            ),
-          ),
-        );
-      },
-      errorBuilder: (_, __, ___) => _buildFallbackImage(width, height),
-    );
-  }
-
-  Widget _buildFallbackImage(double width, double height) {
-    return Container(
-      width: width,
-      height: height,
-      color: const Color(0xFFFFF0F3),
-      child: Center(
-        child: Icon(
-          Icons.fastfood_rounded,
-          color: AppColors.primaryPink.withValues(alpha: 0.7),
-          size: 64,
-        ),
-      ),
+      fallbackIcon: Icons.fastfood_rounded,
     );
   }
 

@@ -1,9 +1,9 @@
-import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
+import '../widgets/app_network_image.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import 'categories_screen.dart';
 import 'item_detail_screen.dart';
@@ -188,55 +188,13 @@ class _HomeMenuScreenState extends State<HomeMenuScreen> {
     required double height,
     required double borderRadius,
   }) {
-    if (url.trim().isEmpty) {
-      return _buildFallbackImage(width, height, borderRadius);
-    }
-
-    if (!url.startsWith('http')) {
-      final file = File(url);
-      if (file.existsSync()) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(borderRadius),
-          child: Image.file(
-            file,
-            width: width,
-            height: height,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                _buildFallbackImage(width, height, borderRadius),
-          ),
-        );
-      }
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: Image.network(
-        url,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            _buildFallbackImage(width, height, borderRadius),
-      ),
-    );
-  }
-
-  Widget _buildFallbackImage(double width, double height, double borderRadius) {
-    return Container(
+    return AppNetworkImage(
+      imageUrl: url,
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F2),
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-      child: Center(
-        child: Icon(
-          Icons.fastfood_rounded,
-          color: AppColors.textMuted.withValues(alpha: 0.6),
-          size: width * 0.4,
-        ),
-      ),
+      borderRadius: borderRadius,
+      fit: BoxFit.cover,
+      fallbackIcon: Icons.fastfood_rounded,
     );
   }
 

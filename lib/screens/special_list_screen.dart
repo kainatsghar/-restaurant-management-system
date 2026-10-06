@@ -1,7 +1,7 @@
-import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import '../widgets/app_network_image.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import 'item_detail_screen.dart';
 import 'profile_screen.dart';
@@ -113,55 +113,13 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
     required double height,
     required double borderRadius,
   }) {
-    if (url.trim().isEmpty) {
-      return _buildFallbackImage(width, height, borderRadius);
-    }
-
-    if (!url.startsWith('http')) {
-      final file = File(url);
-      if (file.existsSync()) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(borderRadius),
-          child: Image.file(
-            file,
-            width: width,
-            height: height,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                _buildFallbackImage(width, height, borderRadius),
-          ),
-        );
-      }
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(borderRadius),
-      child: Image.network(
-        url,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) =>
-            _buildFallbackImage(width, height, borderRadius),
-      ),
-    );
-  }
-
-  Widget _buildFallbackImage(double width, double height, double borderRadius) {
-    return Container(
+    return AppNetworkImage(
+      imageUrl: url,
       width: width,
       height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF3E0),
-        borderRadius: BorderRadius.circular(borderRadius),
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.local_fire_department_rounded,
-          color: Color(0xFFFFA000),
-          size: 32,
-        ),
-      ),
+      borderRadius: borderRadius,
+      fit: BoxFit.cover,
+      fallbackIcon: Icons.local_fire_department_rounded,
     );
   }
 

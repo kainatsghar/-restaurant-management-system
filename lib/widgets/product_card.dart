@@ -1,6 +1,6 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import 'app_network_image.dart';
 
 class ProductCard extends StatelessWidget {
   final String name;
@@ -23,78 +23,6 @@ class ProductCard extends StatelessWidget {
     required this.onDelete,
     this.onTap,
   });
-
-  Widget _buildImage(String url) {
-    if (url.isEmpty) {
-      return _fallbackImage();
-    }
-
-    if (!url.startsWith('http')) {
-      final file = File(url);
-      if (file.existsSync()) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Image.file(
-            file,
-            width: 76,
-            height: 76,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _fallbackImage(),
-          ),
-        );
-      }
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Image.network(
-        url,
-        width: 76,
-        height: 76,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _fallbackImage(),
-        loadingBuilder: (context, child, progress) {
-          if (progress == null) return child;
-          return Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F2),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Center(
-              child: SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.primaryPink,
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _fallbackImage() {
-    return Container(
-      width: 76,
-      height: 76,
-      decoration: BoxDecoration(
-        color: const Color(0xFFEBF2EE),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.fastfood_rounded,
-          color: AppColors.textMuted,
-          size: 32,
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,9 +48,16 @@ class ProductCard extends StatelessWidget {
             padding: const EdgeInsets.all(12),
             child: Row(
               children: [
-            // Left Image
-            _buildImage(imageUrl),
-            const SizedBox(width: 14),
+                // Left Image
+                AppNetworkImage(
+                  imageUrl: imageUrl,
+                  width: 76,
+                  height: 76,
+                  borderRadius: 14,
+                  fit: BoxFit.cover,
+                  fallbackIcon: Icons.fastfood_rounded,
+                ),
+                const SizedBox(width: 14),
 
             // Middle & Right Details
             Expanded(

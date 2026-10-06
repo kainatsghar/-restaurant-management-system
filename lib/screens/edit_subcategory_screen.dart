@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_colors.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/image_service.dart';
 
 class EditSubcategoryScreen extends StatefulWidget {
   final String productId;
@@ -59,38 +59,11 @@ class _EditSubcategoryScreenState extends State<EditSubcategoryScreen> {
 
   Future<String> _uploadImage(String timestamp) async {
     if (_pickedImage == null) return widget.currentImageUrl;
-
-    final metadata = SettableMetadata(contentType: 'image/jpeg');
-
-    // 1. Try default Firebase Storage bucket (.firebasestorage.app)
-    try {
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('subcategories')
-          .child('$timestamp.jpg');
-      final snapshot = await storageRef.putFile(_pickedImage!, metadata);
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      if (downloadUrl.isNotEmpty) return downloadUrl;
-    } catch (e) {
-      debugPrint('Default storage bucket upload error: $e');
-    }
-
-    // 2. Try explicit legacy appspot bucket (.appspot.com)
-    try {
-      final storageRef = FirebaseStorage.instanceFor(
-              bucket: 'fooddeliveryapp-fb8c1.appspot.com')
-          .ref()
-          .child('subcategories')
-          .child('$timestamp.jpg');
-      final snapshot = await storageRef.putFile(_pickedImage!, metadata);
-      final downloadUrl = await snapshot.ref.getDownloadURL();
-      if (downloadUrl.isNotEmpty) return downloadUrl;
-    } catch (e) {
-      debugPrint('Appspot storage bucket upload error: $e');
-    }
-
-    // 3. Fallback to local path
-    return _pickedImage!.path;
+    return await ImageService().uploadOrEncodeImage(
+      imageFile: _pickedImage!,
+      folder: 'subcategories',
+      fileName: timestamp,
+    );
   }
 
   Future<void> _updateSubcategory() async {
