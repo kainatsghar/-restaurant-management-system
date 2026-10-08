@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
+import '../widgets/app_network_image.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import 'categories_screen.dart';
 import 'home_menu_screen.dart';
@@ -42,7 +43,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           _localProfileImage = File(pickedFile.path);
         });
 
-        // Optionally save local path to Firestore
+        // Save local path to Firestore
         final user = _authService.currentUser;
         if (user != null) {
           await _authService.updateUserProfile(
@@ -60,23 +61,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text(
-          'Log Out',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            color: AppColors.textDark,
+        backgroundColor: const Color(0xFF1E1F24),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(
+            color: AppColors.primaryPink.withValues(alpha: 0.28),
+            width: 1,
           ),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryPink.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.logout_rounded,
+                color: AppColors.primaryPink,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Text(
+              'Log Out',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 17,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
         content: const Text(
           'Are you sure you want to log out of your account?',
-          style: TextStyle(color: AppColors.textDark),
+          style: TextStyle(color: Colors.white70, fontSize: 13.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: AppColors.textMuted)),
+            child: const Text('Cancel', style: TextStyle(color: Colors.white60, fontWeight: FontWeight.w600)),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -92,9 +117,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primaryPink,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Logout'),
+            child: const Text('Logout', style: TextStyle(fontWeight: FontWeight.w700)),
           ),
         ],
       ),
@@ -105,209 +131,215 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final User? user = _authService.currentUser;
 
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: _buildNotLoggedInView(),
+      );
+    }
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F7F5),
-      body: user == null
-          ? _buildNotLoggedInView()
-          : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              stream: _authService.userProfileStream(user.uid),
-              builder: (context, snapshot) {
-                // Read profile data from Firestore
-                Map<String, dynamic> profileData = {};
-                if (snapshot.hasData && snapshot.data?.data() != null) {
-                  profileData = snapshot.data!.data()!;
-                }
+      backgroundColor: AppColors.background,
+      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: _authService.userProfileStream(user.uid),
+        builder: (context, snapshot) {
+          // Read profile data from Firestore
+          Map<String, dynamic> profileData = {};
+          if (snapshot.hasData && snapshot.data?.data() != null) {
+            profileData = snapshot.data!.data()!;
+          }
 
-                final String role = (profileData['role'] ?? profileData['user_type'] ?? '').toString().toLowerCase();
-                final bool isOwner = role == 'restaurant' ||
-                    role == 'restaurant_owner' ||
-                    role == 'owner' ||
-                    (profileData['restaurant_name'] != null &&
-                        profileData['restaurant_name'].toString().isNotEmpty);
+          final String role = (profileData['role'] ?? profileData['user_type'] ?? '').toString().toLowerCase();
+          final bool isOwner = role == 'restaurant' ||
+              role == 'restaurant_owner' ||
+              role == 'owner' ||
+              (profileData['restaurant_name'] != null &&
+                  profileData['restaurant_name'].toString().isNotEmpty);
 
-                final String fullName = (profileData['fullName'] ??
-                        profileData['restaurant_name'] ??
-                        profileData['name'] ??
-                        user.displayName ??
-                        'User')
-                    .toString();
+          final String fullName = (profileData['fullName'] ??
+                  profileData['restaurant_name'] ??
+                  profileData['name'] ??
+                  user.displayName ??
+                  'User')
+              .toString();
 
-                final String email = (profileData['email'] ??
-                        user.email ??
-                        'No email provided')
-                    .toString();
+          final String email = (profileData['email'] ??
+                  user.email ??
+                  'No email provided')
+              .toString();
 
-                final String phone = (profileData['phone'] ??
-                        profileData['phone_number'] ??
-                        profileData['contact'] ??
-                        user.phoneNumber ??
-                        'No phone provided')
-                    .toString();
+          final String phone = (profileData['phone'] ??
+                  profileData['phone_number'] ??
+                  profileData['contact'] ??
+                  user.phoneNumber ??
+                  'No phone provided')
+              .toString();
 
-                final String restaurantName = (profileData['restaurant_name'] ?? '').toString();
+          final String restaurantName = (profileData['restaurant_name'] ?? '').toString();
 
-                final String? savedPhotoUrl = (profileData['photoUrl'] ??
-                        profileData['logo_image'] ??
-                        profileData['logo'] ??
-                        user.photoURL) as String?;
+          final String? savedPhotoUrl = (profileData['photoUrl'] ??
+                  profileData['logo_image'] ??
+                  profileData['logo'] ??
+                  user.photoURL) as String?;
 
-                return SafeArea(
-                  top: false,
-                  child: Column(
-                    children: [
-                      Expanded(
-                        child: SingleChildScrollView(
-                          physics: const BouncingScrollPhysics(),
-                          child: Column(
+          return SafeArea(
+            top: false,
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Column(
+                      children: [
+                        // Top Pink Banner & Overlapping Avatar
+                        _buildHeaderWithAvatar(
+                          fullName: fullName,
+                          savedPhotoUrl: savedPhotoUrl,
+                        ),
+                        const SizedBox(height: 14),
+
+                        // User Name in Bold High-Contrast Dark
+                        Text(
+                          fullName.isNotEmpty ? fullName : 'Profile',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.textDark,
+                            letterSpacing: -0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+
+                        // Account Role Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1E1F24),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: AppColors.primaryPink.withValues(alpha: 0.45),
+                              width: 1.1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppColors.primaryPink.withValues(alpha: 0.15),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // Top Pink Banner & Overlapping Avatar
-                              _buildHeaderWithAvatar(
-                                fullName: fullName,
-                                savedPhotoUrl: savedPhotoUrl,
+                              Icon(
+                                isOwner ? Icons.storefront_rounded : Icons.person_rounded,
+                                size: 14,
+                                color: AppColors.primaryPink,
                               ),
-                              const SizedBox(height: 14),
-
-                              // User Name in Fresh Green
+                              const SizedBox(width: 6),
                               Text(
-                                fullName.isNotEmpty ? fullName : 'Profile',
+                                isOwner ? 'Restaurant Owner' : 'Customer Account',
                                 style: const TextStyle(
-                                  fontSize: 22,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF80BC24),
-                                  letterSpacing: -0.2,
+                                  color: AppColors.primaryPink,
                                 ),
                               ),
-                              const SizedBox(height: 6),
-
-                              // Account Role Badge
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: isOwner
-                                      ? AppColors.primaryPink.withValues(alpha: 0.12)
-                                      : const Color(0xFF80BC24).withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(
-                                    color: isOwner
-                                        ? AppColors.primaryPink.withValues(alpha: 0.4)
-                                        : const Color(0xFF80BC24).withValues(alpha: 0.4),
-                                    width: 1,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      isOwner ? Icons.storefront_rounded : Icons.person_rounded,
-                                      size: 14,
-                                      color: isOwner ? AppColors.primaryPink : const Color(0xFF6E9F20),
-                                    ),
-                                    const SizedBox(width: 5),
-                                    Text(
-                                      isOwner ? 'Restaurant Owner' : 'Customer Account',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w700,
-                                        color: isOwner ? AppColors.primaryPink : const Color(0xFF6E9F20),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-
-                              // Details Card with Name, Email, Phone, Role, and Order Action
-                              _buildDetailsCard(
-                                fullName: fullName,
-                                email: email,
-                                phone: phone,
-                                isOwner: isOwner,
-                                restaurantName: restaurantName,
-                              ),
-                              const SizedBox(height: 30),
                             ],
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-      bottomNavigationBar: user == null
-          ? null
-          : StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-              stream: _authService.userProfileStream(user.uid),
-              builder: (context, snapshot) {
-                final profileData = snapshot.data?.data() ?? {};
-                final String role = (profileData['role'] ?? profileData['user_type'] ?? '').toString().toLowerCase();
-                final bool isOwner = role == 'restaurant' ||
-                    role == 'restaurant_owner' ||
-                    role == 'owner' ||
-                    (profileData['restaurant_name'] != null &&
-                        profileData['restaurant_name'].toString().isNotEmpty);
+                        const SizedBox(height: 22),
 
-                return CustomBottomNavBar(
-                  currentIndex: 3,
-                  icons: isOwner
-                      ? const [
-                          Icons.home_rounded,
-                          Icons.restaurant_rounded,
-                          Icons.menu_book_outlined,
-                          Icons.person_outline_rounded,
-                        ]
-                      : const [
-                          Icons.storefront_rounded,
-                          Icons.local_offer_outlined,
-                          Icons.receipt_long_rounded,
-                          Icons.person_outline_rounded,
-                        ],
-                  onTap: (index) {
-                    if (isOwner) {
-                      if (index == 0) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const HomeMenuScreen(),
-                          ),
-                        );
-                      } else if (index == 1) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const CategoriesScreen(),
-                          ),
-                        );
-                      } else if (index == 2) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const MenuScreen(),
-                          ),
-                        );
-                      }
-                    } else {
-                      if (index == 0) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const UserRestaurantsScreen(),
-                          ),
-                        );
-                      } else if (index == 1) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const SpecialListScreen(),
-                          ),
-                        );
-                      } else if (index == 2) {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => const UserOrdersScreen(),
-                          ),
-                        );
-                      }
-                    }
-                  },
-                );
-              },
+                        // Details Card with Name, Email, Phone, Role, and Order Action
+                        _buildDetailsCard(
+                          fullName: fullName,
+                          email: email,
+                          phone: phone,
+                          isOwner: isOwner,
+                          restaurantName: restaurantName,
+                        ),
+                        const SizedBox(height: 30),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
+          );
+        },
+      ),
+      bottomNavigationBar: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: _authService.userProfileStream(user.uid),
+        builder: (context, snapshot) {
+          final profileData = snapshot.data?.data() ?? {};
+          final String role = (profileData['role'] ?? profileData['user_type'] ?? '').toString().toLowerCase();
+          final bool isOwner = role == 'restaurant' ||
+              role == 'restaurant_owner' ||
+              role == 'owner' ||
+              (profileData['restaurant_name'] != null &&
+                  profileData['restaurant_name'].toString().isNotEmpty);
+
+          return CustomBottomNavBar(
+            currentIndex: 3,
+            icons: isOwner
+                ? const [
+                    Icons.home_rounded,
+                    Icons.restaurant_rounded,
+                    Icons.menu_book_outlined,
+                    Icons.person_outline_rounded,
+                  ]
+                : const [
+                    Icons.storefront_rounded,
+                    Icons.local_offer_outlined,
+                    Icons.receipt_long_rounded,
+                    Icons.person_outline_rounded,
+                  ],
+            onTap: (index) {
+              if (isOwner) {
+                if (index == 0) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const HomeMenuScreen(),
+                    ),
+                  );
+                } else if (index == 1) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const CategoriesScreen(),
+                    ),
+                  );
+                } else if (index == 2) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const MenuScreen(),
+                    ),
+                  );
+                }
+              } else {
+                if (index == 0) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const UserRestaurantsScreen(),
+                    ),
+                  );
+                } else if (index == 1) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const SpecialListScreen(),
+                    ),
+                  );
+                } else if (index == 2) {
+                  Navigator.of(context).pushReplacement(
+                    MaterialPageRoute(
+                      builder: (context) => const UserOrdersScreen(),
+                    ),
+                  );
+                }
+              }
+            },
+          );
+        },
+      ),
     );
   }
 
@@ -315,75 +347,97 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: AppColors.primaryPink.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.person_outline_rounded,
-                size: 64,
-                color: AppColors.primaryPink,
-              ),
+        child: Container(
+          padding: const EdgeInsets.all(28),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [
+                Color(0xFF1A1B20),
+                Color(0xFF261822),
+                Color(0xFF381420),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'No user currently signed in',
-              style: TextStyle(
-                fontSize: 18,
-                color: AppColors.textDark,
-                fontWeight: FontWeight.w700,
-              ),
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(
+              color: AppColors.primaryPink.withValues(alpha: 0.28),
+              width: 1.1,
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'Please sign in to view your profile and manage your restaurant account.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textMuted,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.25),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
               ),
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: 150,
-              height: 44,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    (route) => false,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryPink,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryPink.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.primaryPink.withValues(alpha: 0.35)),
+                ),
+                child: const Icon(
+                  Icons.person_outline_rounded,
+                  size: 52,
+                  color: AppColors.primaryPink,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'No user currently signed in',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Please sign in to view your profile and manage your restaurant account.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13.5,
+                  color: Colors.white70,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: 160,
+                height: 44,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primaryPink,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  icon: const Icon(Icons.login_rounded, size: 18),
+                  label: const Text(
+                    'Sign In',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.login_rounded, size: 18),
-                    SizedBox(width: 8),
-                    Text(
-                      'Sign In',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -397,12 +451,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       alignment: Alignment.topCenter,
       clipBehavior: Clip.none,
       children: [
-        // Pink Header Background
+        // Pink Header Background Gradient
         Container(
           width: double.infinity,
           height: 160,
           decoration: const BoxDecoration(
-            color: Color(0xFFFA4468),
+            gradient: LinearGradient(
+              colors: [
+                Color(0xFFFA4468),
+                Color(0xFFFF6584),
+                Color(0xFF261822),
+              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
           ),
         ),
 
@@ -412,17 +474,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
           width: 140,
           height: 140,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: const Color(0xFF1E1F24),
             borderRadius: BorderRadius.circular(28),
+            border: Border.all(
+              color: AppColors.primaryPink,
+              width: 2.8,
+            ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.12),
+                color: Colors.black.withValues(alpha: 0.35),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
+              BoxShadow(
+                color: AppColors.primaryPink.withValues(alpha: 0.25),
+                blurRadius: 14,
+                offset: const Offset(0, 2),
+              ),
             ],
           ),
-          padding: const EdgeInsets.all(5),
+          padding: const EdgeInsets.all(4),
           child: Stack(
             children: [
               ClipRRect(
@@ -441,14 +512,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: GestureDetector(
                   onTap: _pickImage,
                   child: Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(7),
                     decoration: BoxDecoration(
-                      color: AppColors.primaryPink,
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFA4468), Color(0xFFFF6584)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: const Color(0xFF1E1F24), width: 2),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.2),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 4,
                         ),
                       ],
@@ -477,35 +552,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     if (savedPhotoUrl != null && savedPhotoUrl.isNotEmpty) {
-      if (savedPhotoUrl.startsWith('http')) {
-        return Image.network(
-          savedPhotoUrl,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildDefaultAvatar(),
-        );
-      } else {
-        final file = File(savedPhotoUrl);
-        if (file.existsSync()) {
-          return Image.file(
-            file,
-            fit: BoxFit.cover,
-          );
-        }
-      }
+      return AppNetworkImage(
+        imageUrl: savedPhotoUrl,
+        width: double.infinity,
+        height: double.infinity,
+        borderRadius: 24,
+        fit: BoxFit.cover,
+        fallbackIcon: Icons.person_rounded,
+      );
     }
 
-    // Default stylish placeholder avatar matching mockup
+    // Default stylish placeholder avatar matching luxury theme
     return _buildDefaultAvatar();
   }
 
   Widget _buildDefaultAvatar() {
     return Container(
-      color: const Color(0xFFE8EEF3),
+      color: const Color(0xFF1E1F24),
       child: Center(
         child: Icon(
           Icons.person_rounded,
-          size: 72,
-          color: Colors.grey[400],
+          size: 68,
+          color: AppColors.primaryPink.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -524,13 +592,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 24),
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 26),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF1A1B20), // Deep obsidian charcoal
+            Color(0xFF261822), // Dark plum/rose undertone
+            Color(0xFF381420), // Subtle pinkish-dark glow
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(22),
+        border: Border.all(
+          color: AppColors.primaryPink.withValues(alpha: 0.28),
+          width: 1.1,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: Colors.black.withValues(alpha: 0.25),
             blurRadius: 18,
             offset: const Offset(0, 6),
+          ),
+          BoxShadow(
+            color: AppColors.primaryPink.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -575,38 +660,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 24),
 
           // Role-specific Orders Button
-          SizedBox(
+          Container(
             width: double.infinity,
             height: 46,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                if (isOwner) {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const RestaurantOrdersScreen(),
-                    ),
-                  );
-                } else {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const UserOrdersScreen(),
-                    ),
-                  );
-                }
-              },
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: AppColors.primaryPink, width: 1.4),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0xFFFA4468), Color(0xFFFF6584)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              icon: const Icon(Icons.receipt_long_rounded, color: AppColors.primaryPink, size: 18),
-              label: Text(
-                isOwner ? 'Manage Restaurant Orders' : 'My Orders & Live Tracking',
-                style: const TextStyle(
-                  color: AppColors.primaryPink,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  if (isOwner) {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const RestaurantOrdersScreen(),
+                      ),
+                    );
+                  } else {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const UserOrdersScreen(),
+                      ),
+                    );
+                  }
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.receipt_long_rounded, color: Colors.white, size: 18),
+                    const SizedBox(width: 8),
+                    Text(
+                      isOwner ? 'Manage Restaurant Orders' : 'My Orders & Live Tracking',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -614,25 +718,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
           const SizedBox(height: 14),
 
           // Logout Button
-          SizedBox(
-            width: 125,
-            height: 38,
-            child: ElevatedButton(
-              onPressed: _handleLogout,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFA4468),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: _handleLogout,
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: 130,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2C1920),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: AppColors.deleteIcon.withValues(alpha: 0.4),
+                    width: 1,
+                  ),
                 ),
-                padding: EdgeInsets.zero,
-              ),
-              child: const Text(
-                'Logout',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.logout_rounded,
+                      color: AppColors.deleteIcon,
+                      size: 16,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      'Logout',
+                      style: TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.deleteIcon,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -649,13 +768,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Row(
       children: [
         SizedBox(
-          width: 100,
+          width: 105,
           child: Text(
             label,
             style: const TextStyle(
               fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: Color(0xFFFA4468),
+              fontWeight: FontWeight.w700,
+              color: Color(0xFFFF6584),
             ),
           ),
         ),
@@ -666,14 +785,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               vertical: 10,
             ),
             decoration: BoxDecoration(
-              color: const Color(0xFFF1F6F4),
-              borderRadius: BorderRadius.circular(8),
+              color: const Color(0xFF141518),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: const Color(0xFF2A2B33),
+                width: 0.9,
+              ),
             ),
             child: Text(
               value,
               style: const TextStyle(
-                fontSize: 13,
-                color: Color(0xFF374151),
+                fontSize: 13.5,
+                color: Colors.white,
                 fontWeight: FontWeight.w600,
               ),
               maxLines: 1,

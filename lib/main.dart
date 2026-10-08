@@ -6,6 +6,7 @@ import 'constants/app_colors.dart';
 import 'firebase_options.dart';
 import 'screens/home_menu_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/splash_screen.dart';
 import 'screens/user_restaurants_screen.dart';
 import 'services/auth_service.dart';
 
@@ -17,10 +18,10 @@ void main() async {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.light,
       systemNavigationBarColor: Colors.transparent,
       systemNavigationBarDividerColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarIconBrightness: Brightness.light,
       systemNavigationBarContrastEnforced: false,
       systemStatusBarContrastEnforced: false,
     ),
@@ -31,6 +32,7 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    AuthService().deletePizzaCategoryAndItems();
   } catch (e) {
     debugPrint('Firebase init error: $e');
   }
@@ -62,7 +64,7 @@ class RestaurantApp extends StatelessWidget {
           iconTheme: IconThemeData(color: AppColors.textDark),
         ),
       ),
-      home: const AuthGate(),
+      home: const SplashScreen(),
     );
   }
 }
@@ -81,7 +83,7 @@ class AuthGate extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.background,
             body: Center(
               child: CircularProgressIndicator(
                 color: AppColors.primaryPink,
@@ -96,7 +98,7 @@ class AuthGate extends StatelessWidget {
             builder: (context, roleSnapshot) {
               if (roleSnapshot.connectionState == ConnectionState.waiting) {
                 return const Scaffold(
-                  backgroundColor: Colors.white,
+                  backgroundColor: AppColors.background,
                   body: Center(
                     child: CircularProgressIndicator(
                       color: AppColors.primaryPink,

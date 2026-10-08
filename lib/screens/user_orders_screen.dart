@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
+import '../widgets/app_network_image.dart';
 import '../widgets/custom_bottom_nav_bar.dart';
 import 'order_tracking_screen.dart';
 import 'profile_screen.dart';
@@ -28,56 +29,155 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
     super.dispose();
   }
 
+  void _confirmDeleteOrder(String orderDocId, String itemName) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1F24),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: BorderSide(
+            color: AppColors.primaryPink.withValues(alpha: 0.28),
+            width: 1,
+          ),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.primaryPink.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.delete_outline_rounded,
+                color: AppColors.primaryPink,
+                size: 22,
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'Cancel & Delete Order',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 17,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to cancel and delete your order for "$itemName"? This order will be permanently deleted from your records.',
+          style: const TextStyle(
+            fontSize: 13.5,
+            color: Colors.white70,
+            height: 1.4,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text(
+              'No, Keep',
+              style: TextStyle(
+                color: Colors.white60,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryPink,
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            onPressed: () async {
+              Navigator.of(ctx).pop();
+              try {
+                await FirebaseFirestore.instance
+                    .collection('orders')
+                    .doc(orderDocId)
+                    .delete();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const Icon(Icons.check_circle_outline_rounded,
+                              color: Colors.white, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Order for "$itemName" cancelled and deleted.',
+                              style: const TextStyle(
+                                  fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                      backgroundColor: const Color(0xFF1E1F24),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide(
+                          color: AppColors.primaryPink.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      margin: const EdgeInsets.all(16),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to delete order: $e'),
+                      backgroundColor: Colors.red,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      margin: const EdgeInsets.all(16),
+                    ),
+                  );
+                }
+              }
+            },
+            child: const Text(
+              'Yes, Cancel & Delete',
+              style: TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'preparing':
       case 'in progress':
-        return const Color(0xFF1976D2);
+        return const Color(0xFF2979FF);
       case 'ready':
       case 'on the way':
-        return const Color(0xFFF57C00);
+        return const Color(0xFFFF9100);
       case 'completed':
       case 'delivered':
-        return AppColors.editGreen;
+        return const Color(0xFF00E676);
       case 'cancelled':
       case 'rejected':
-        return const Color(0xFFD32F2F);
+        return const Color(0xFFFF5252);
       case 'ordered':
       case 'pending':
       default:
-        return const Color(0xFFE65100);
+        return const Color(0xFFFF6D00);
     }
-  }
-
-  Widget _buildImage(String url) {
-    if (url.isEmpty) {
-      return _buildFallbackImage();
-    }
-    if (!url.startsWith('http')) {
-      final file = File(url);
-      if (file.existsSync()) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Image.file(
-            file,
-            width: 72,
-            height: 72,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildFallbackImage(),
-          ),
-        );
-      }
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Image.network(
-        url,
-        width: 72,
-        height: 72,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildFallbackImage(),
-      ),
-    );
   }
 
   Widget _buildFallbackImage() {
@@ -85,16 +185,193 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
       width: 72,
       height: 72,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F2),
+        color: const Color(0xFF26272E),
         borderRadius: BorderRadius.circular(14),
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.fastfood_rounded,
-          color: AppColors.textMuted,
-          size: 32,
+        border: Border.all(
+          color: AppColors.primaryPink.withValues(alpha: 0.25),
+          width: 1,
         ),
       ),
+      child: Center(
+        child: Icon(
+          Icons.fastfood_rounded,
+          color: AppColors.primaryPink.withValues(alpha: 0.7),
+          size: 30,
+        ),
+      ),
+    );
+  }
+
+  bool _isUsableImage(String str) {
+    final clean = str.trim();
+    if (clean.isEmpty) return false;
+    if (clean.startsWith('http://') || clean.startsWith('https://')) return true;
+    if (clean.startsWith('data:image') || clean.length > 200) return true;
+    try {
+      final f = File(clean);
+      return f.existsSync();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<String?> _resolveExactOrderItemImage(Map<String, dynamic> data) async {
+    // 1. Direct picture in order document
+    final String directPic = (
+      data['item_pic'] ??
+      data['prod_pic'] ??
+      data['imageUrl'] ??
+      data['image_url'] ??
+      data['item_image'] ??
+      data['image'] ??
+      data['pic'] ??
+      data['photoUrl'] ??
+      data['product_pic'] ??
+      data['img'] ??
+      ''
+    ).toString().trim();
+
+    if (_isUsableImage(directPic)) {
+      return directPic;
+    }
+
+    final String itemId = (data['item_id'] ?? data['prod_id'] ?? data['id'] ?? '').toString().trim();
+    final String itemName = (data['item_name'] ?? data['name'] ?? data['prod_name'] ?? '').toString().trim();
+
+    // 2. Fetch by Item ID in 'items' collection
+    if (itemId.isNotEmpty) {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('items').doc(itemId).get();
+        if (doc.exists && doc.data() != null) {
+          final d = doc.data()!;
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+
+      // Try 'products' collection
+      try {
+        final doc = await FirebaseFirestore.instance.collection('products').doc(itemId).get();
+        if (doc.exists && doc.data() != null) {
+          final d = doc.data()!;
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+
+      // Query where item_id == itemId
+      try {
+        final q = await FirebaseFirestore.instance.collection('items').where('item_id', isEqualTo: itemId).limit(1).get();
+        if (q.docs.isNotEmpty) {
+          final d = q.docs.first.data();
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+
+      // Query where prod_id == itemId
+      try {
+        final q = await FirebaseFirestore.instance.collection('products').where('prod_id', isEqualTo: itemId).limit(1).get();
+        if (q.docs.isNotEmpty) {
+          final d = q.docs.first.data();
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+    }
+
+    // 3. Fetch by Item Name in 'items' or 'products'
+    if (itemName.isNotEmpty) {
+      try {
+        final q = await FirebaseFirestore.instance.collection('items').where('item_name', isEqualTo: itemName).limit(1).get();
+        if (q.docs.isNotEmpty) {
+          final d = q.docs.first.data();
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+
+      try {
+        final q = await FirebaseFirestore.instance.collection('products').where('prod_name', isEqualTo: itemName).limit(1).get();
+        if (q.docs.isNotEmpty) {
+          final d = q.docs.first.data();
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+
+      // Scan items collection for case-insensitive match
+      try {
+        final snap = await FirebaseFirestore.instance.collection('items').get();
+        final lowerName = itemName.toLowerCase().trim();
+        for (final doc in snap.docs) {
+          final d = doc.data();
+          final dName = (d['item_name'] ?? d['prod_name'] ?? d['name'] ?? '').toString().toLowerCase().trim();
+          if (dName == lowerName || (dName.isNotEmpty && (dName.contains(lowerName) || lowerName.contains(dName)))) {
+            final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+            if (_isUsableImage(p)) return p;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 4. Try Category if available
+    final String catId = (data['category_id'] ?? data['cat_id'] ?? '').toString().trim();
+    final String catName = (data['category_name'] ?? data['cat_name'] ?? '').toString().trim();
+    if (catId.isNotEmpty) {
+      try {
+        final cDoc = await FirebaseFirestore.instance.collection('categories').doc(catId).get();
+        if (cDoc.exists && cDoc.data() != null) {
+          final d = cDoc.data()!;
+          final p = (d['cat_pic'] ?? d['category_pic'] ?? d['imageUrl'] ?? d['image'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+    }
+
+    if (catName.isNotEmpty) {
+      try {
+        final cSnap = await FirebaseFirestore.instance.collection('categories').where('category_name', isEqualTo: catName).limit(1).get();
+        if (cSnap.docs.isNotEmpty) {
+          final d = cSnap.docs.first.data();
+          final p = (d['cat_pic'] ?? d['category_pic'] ?? d['imageUrl'] ?? d['image'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+    }
+
+    if (directPic.isNotEmpty) return directPic;
+    return null;
+  }
+
+  Widget _buildOrderItemImage(Map<String, dynamic> data) {
+    return FutureBuilder<String?>(
+      future: _resolveExactOrderItemImage(data),
+      builder: (context, snapshot) {
+        final String imgUrl = snapshot.data ?? '';
+        if (imgUrl.isNotEmpty) {
+          return Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.primaryPink.withValues(alpha: 0.35),
+                width: 1,
+              ),
+            ),
+            child: AppNetworkImage(
+              imageUrl: imgUrl,
+              width: 72,
+              height: 72,
+              borderRadius: 14,
+              fit: BoxFit.cover,
+              fallbackIcon: Icons.fastfood_rounded,
+            ),
+          );
+        }
+        return _buildFallbackImage();
+      },
     );
   }
 
@@ -106,11 +383,11 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: const Color(0xFF1E1F24),
           elevation: 0,
-          title: const Text('My Orders', style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold)),
+          title: const Text('My Orders', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.textDark),
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: AppColors.primaryPink),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -127,9 +404,8 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
           children: [
             // 1. Header Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Material(
                     color: Colors.transparent,
@@ -140,12 +416,15 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: const Color(0xFF1E1F24),
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: AppColors.inputBorder),
+                          border: Border.all(
+                            color: const Color(0xFF2E313C),
+                            width: 1,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -154,21 +433,25 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                         child: const Icon(
                           Icons.arrow_back_ios_new_rounded,
                           size: 18,
-                          color: AppColors.textDark,
+                          color: AppColors.primaryPink,
                         ),
                       ),
                     ),
                   ),
-                  const Text(
-                    'My Orders & Tracking',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textDark,
-                      letterSpacing: -0.3,
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Text(
+                      'My Orders & Tracking',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                        letterSpacing: -0.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(width: 38), // Balance spacing
                 ],
               ),
             ),
@@ -177,15 +460,18 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
               child: Container(
-                height: 44,
+                height: 46,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: AppColors.inputBorder),
+                  color: const Color(0xFF1E1F24),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: const Color(0xFF2E313C),
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
-                      blurRadius: 6,
+                      color: Colors.black.withValues(alpha: 0.12),
+                      blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
                   ],
@@ -193,14 +479,14 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                 child: TextField(
                   controller: _searchController,
                   onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
-                  style: const TextStyle(fontSize: 13.5, color: AppColors.textDark),
+                  style: const TextStyle(fontSize: 13.5, color: Colors.white),
                   decoration: InputDecoration(
                     hintText: 'Search dishes, restaurant or status...',
-                    hintStyle: const TextStyle(fontSize: 13, color: AppColors.textMuted),
-                    prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.textMuted),
+                    hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF8E92A0)),
+                    prefixIcon: const Icon(Icons.search_rounded, size: 20, color: AppColors.primaryPink),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.textMuted),
+                            icon: const Icon(Icons.close_rounded, size: 18, color: Colors.white60),
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
@@ -318,65 +604,96 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                         Expanded(
                           child: Center(
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 32),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    width: 72,
-                                    height: 72,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.primaryPink.withValues(alpha: 0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.receipt_long_rounded,
-                                      size: 36,
-                                      color: AppColors.primaryPink,
-                                    ),
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              child: Container(
+                                padding: const EdgeInsets.all(28),
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF1A1B20),
+                                      Color(0xFF261822),
+                                      Color(0xFF381420),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
                                   ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    _searchQuery.isNotEmpty
-                                        ? 'No matching orders found'
-                                        : _selectedFilter == 'ACTIVE'
-                                            ? 'No Active Orders'
-                                            : 'No orders placed yet',
-                                    style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.textDark,
-                                    ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: AppColors.primaryPink.withValues(alpha: 0.28),
+                                    width: 1.1,
                                   ),
-                                  const SizedBox(height: 6),
-                                  const Text(
-                                    'When you order food from our restaurants, you can track it live here in real-time.',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: AppColors.textMuted,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
                                     ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  SizedBox(
-                                    height: 42,
-                                    child: ElevatedButton.icon(
-                                      onPressed: () {
-                                        Navigator.of(context).pushAndRemoveUntil(
-                                          MaterialPageRoute(builder: (_) => const UserRestaurantsScreen()),
-                                          (route) => false,
-                                        );
-                                      },
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: AppColors.primaryPink,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ],
+                                ),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 64,
+                                      height: 64,
+                                      decoration: BoxDecoration(
+                                        color: AppColors.primaryPink.withValues(alpha: 0.15),
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: AppColors.primaryPink.withValues(alpha: 0.3),
+                                        ),
                                       ),
-                                      icon: const Icon(Icons.restaurant_menu_rounded, size: 18),
-                                      label: const Text('Browse Food Menu', style: TextStyle(fontWeight: FontWeight.w600)),
+                                      child: const Icon(
+                                        Icons.receipt_long_rounded,
+                                        size: 32,
+                                        color: AppColors.primaryPink,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      _searchQuery.isNotEmpty
+                                          ? 'No matching orders found'
+                                          : _selectedFilter == 'ACTIVE'
+                                              ? 'No Active Orders'
+                                              : 'No orders placed yet',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    const Text(
+                                      'When you order food from our restaurants, you can track it live here in real-time.',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.white70,
+                                        height: 1.35,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    SizedBox(
+                                      height: 42,
+                                      child: ElevatedButton.icon(
+                                        onPressed: () {
+                                          Navigator.of(context).pushAndRemoveUntil(
+                                            MaterialPageRoute(builder: (_) => const UserRestaurantsScreen()),
+                                            (route) => false,
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppColors.primaryPink,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                        ),
+                                        icon: const Icon(Icons.restaurant_menu_rounded, size: 18),
+                                        label: const Text('Browse Food Menu', style: TextStyle(fontWeight: FontWeight.w600)),
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
@@ -393,7 +710,6 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                               final orderDocId = doc.id;
 
                               final itemName = (data['item_name'] ?? data['name'] ?? 'Dish').toString();
-                              final itemPic = (data['item_pic'] ?? data['imageUrl'] ?? '').toString();
                               final restaurantName = (data['restaurant_name'] ?? 'Restaurant').toString();
 
                               final qtyRaw = data['quantity'] ?? 1;
@@ -420,14 +736,30 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 14),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Color(0xFF1A1B20), // Deep obsidian charcoal
+                                      Color(0xFF261822), // Dark plum/rose undertone
+                                      Color(0xFF381420), // Subtle pinkish-dark glow
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
                                   borderRadius: BorderRadius.circular(18),
-                                  border: Border.all(color: const Color(0xFFF1F3F5), width: 1.2),
+                                  border: Border.all(
+                                    color: AppColors.primaryPink.withValues(alpha: 0.28),
+                                    width: 1.1,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.03),
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                    BoxShadow(
+                                      color: AppColors.primaryPink.withValues(alpha: 0.08),
                                       blurRadius: 8,
-                                      offset: const Offset(0, 3),
+                                      offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
@@ -455,10 +787,14 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               Container(
-                                                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
                                                 decoration: BoxDecoration(
-                                                  color: statusColor.withValues(alpha: 0.1),
+                                                  color: statusColor.withValues(alpha: 0.15),
                                                   borderRadius: BorderRadius.circular(8),
+                                                  border: Border.all(
+                                                    color: statusColor.withValues(alpha: 0.35),
+                                                    width: 0.8,
+                                                  ),
                                                 ),
                                                 child: Row(
                                                   mainAxisSize: MainAxisSize.min,
@@ -469,6 +805,13 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                                                       decoration: BoxDecoration(
                                                         color: statusColor,
                                                         shape: BoxShape.circle,
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: statusColor.withValues(alpha: 0.6),
+                                                            blurRadius: 4,
+                                                            spreadRadius: 1,
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
                                                     const SizedBox(width: 6),
@@ -478,31 +821,62 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                                                         fontSize: 11,
                                                         fontWeight: FontWeight.w800,
                                                         color: statusColor,
+                                                        letterSpacing: 0.5,
                                                       ),
                                                     ),
                                                   ],
                                                 ),
                                               ),
-                                              if (orderTime.isNotEmpty)
-                                                Text(
-                                                  orderTime,
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    color: AppColors.textMuted,
-                                                    fontWeight: FontWeight.w500,
+                                              Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  if (orderTime.isNotEmpty)
+                                                    Text(
+                                                      orderTime,
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        color: Colors.white60,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  const SizedBox(width: 8),
+                                                  Material(
+                                                    color: Colors.transparent,
+                                                    child: InkWell(
+                                                      onTap: () => _confirmDeleteOrder(
+                                                          orderDocId, itemName),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                      child: Container(
+                                                        padding: const EdgeInsets.all(6),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(0xFF2C1920),
+                                                          borderRadius: BorderRadius.circular(8),
+                                                          border: Border.all(
+                                                            color: AppColors.deleteIcon.withValues(alpha: 0.35),
+                                                            width: 0.8,
+                                                          ),
+                                                        ),
+                                                        child: const Icon(
+                                                          Icons.delete_outline_rounded,
+                                                          size: 17,
+                                                          color: AppColors.deleteIcon,
+                                                        ),
+                                                      ),
+                                                    ),
                                                   ),
-                                                ),
+                                                ],
+                                              ),
                                             ],
                                           ),
 
                                           const SizedBox(height: 12),
-                                          const Divider(height: 1),
+                                          Divider(height: 1, color: const Color(0xFF2E313C).withValues(alpha: 0.7)),
                                           const SizedBox(height: 12),
 
                                           // Dish Info Row
                                           Row(
                                             children: [
-                                              _buildImage(itemPic),
+                                              _buildOrderItemImage(data),
                                               const SizedBox(width: 12),
                                               Expanded(
                                                 child: Column(
@@ -513,18 +887,18 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                                                       style: const TextStyle(
                                                         fontSize: 15.5,
                                                         fontWeight: FontWeight.w700,
-                                                        color: AppColors.textDark,
+                                                        color: Colors.white,
                                                       ),
                                                       maxLines: 1,
                                                       overflow: TextOverflow.ellipsis,
                                                     ),
                                                     if (restaurantName.isNotEmpty) ...[
-                                                      const SizedBox(height: 2),
+                                                      const SizedBox(height: 3),
                                                       Text(
                                                         restaurantName,
                                                         style: const TextStyle(
-                                                          fontSize: 12,
-                                                          color: AppColors.primaryPink,
+                                                          fontSize: 12.5,
+                                                          color: Color(0xFFFF6584),
                                                           fontWeight: FontWeight.w600,
                                                         ),
                                                         maxLines: 1,
@@ -537,7 +911,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                                                       style: const TextStyle(
                                                         fontSize: 12.5,
                                                         fontWeight: FontWeight.w600,
-                                                        color: AppColors.textMuted,
+                                                        color: Colors.white70,
                                                       ),
                                                     ),
                                                   ],
@@ -550,7 +924,7 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                                                     'Total Bill',
                                                     style: TextStyle(
                                                       fontSize: 11,
-                                                      color: AppColors.textMuted,
+                                                      color: Colors.white60,
                                                       fontWeight: FontWeight.w600,
                                                     ),
                                                   ),
@@ -558,9 +932,9 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
                                                   Text(
                                                     'Rs. ${totalPrice.toStringAsFixed(2)}',
                                                     style: const TextStyle(
-                                                      fontSize: 15.5,
+                                                      fontSize: 16,
                                                       fontWeight: FontWeight.w800,
-                                                      color: AppColors.primaryPink,
+                                                      color: Color(0xFFFF5277),
                                                     ),
                                                   ),
                                                 ],
@@ -572,47 +946,111 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
 
                                           // Bottom Track Live Button Row
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFFF8FAFB),
+                                              color: const Color(0xFF141518),
                                               borderRadius: BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: const Color(0xFF2A2B33),
+                                                width: 0.9,
+                                              ),
                                             ),
                                             child: Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                               children: [
-                                                Row(
-                                                  children: [
-                                                    Icon(Icons.location_on_rounded, size: 16, color: statusColor),
-                                                    const SizedBox(width: 6),
-                                                    Text(
-                                                      status.toLowerCase() == 'delivered'
-                                                          ? 'Delivered to your address'
-                                                          : 'Live tracking on GPS Map',
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        fontWeight: FontWeight.w600,
-                                                        color: AppColors.textDark,
-                                                      ),
+                                                Icon(Icons.location_on_rounded, size: 15, color: statusColor),
+                                                const SizedBox(width: 5),
+                                                Expanded(
+                                                  child: Text(
+                                                    status.toLowerCase() == 'delivered'
+                                                        ? 'Delivered'
+                                                        : 'Live GPS Map',
+                                                    style: const TextStyle(
+                                                      fontSize: 11.5,
+                                                      fontWeight: FontWeight.w600,
+                                                      color: Colors.white,
                                                     ),
-                                                  ],
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
                                                 ),
-                                                const Row(
-                                                  children: [
-                                                    Text(
-                                                      'Track',
-                                                      style: TextStyle(
-                                                        fontSize: 12.5,
-                                                        fontWeight: FontWeight.w700,
-                                                        color: AppColors.primaryPink,
+                                                const SizedBox(width: 6),
+                                                Material(
+                                                  color: Colors.transparent,
+                                                  child: InkWell(
+                                                    onTap: () => _confirmDeleteOrder(
+                                                        orderDocId, itemName),
+                                                    borderRadius: BorderRadius.circular(8),
+                                                    child: Container(
+                                                      padding: const EdgeInsets.symmetric(
+                                                          horizontal: 8, vertical: 4.5),
+                                                      decoration: BoxDecoration(
+                                                        color: const Color(0xFF2E1922),
+                                                        borderRadius: BorderRadius.circular(8),
+                                                        border: Border.all(
+                                                          color: AppColors.deleteIcon.withValues(alpha: 0.35),
+                                                          width: 0.8,
+                                                        ),
+                                                      ),
+                                                      child: const Row(
+                                                        mainAxisSize: MainAxisSize.min,
+                                                        children: [
+                                                          Icon(
+                                                            Icons.cancel_outlined,
+                                                            size: 13,
+                                                            color: AppColors.deleteIcon,
+                                                          ),
+                                                          SizedBox(width: 3),
+                                                          Text(
+                                                            'Cancel',
+                                                            style: TextStyle(
+                                                              fontSize: 11,
+                                                              fontWeight: FontWeight.w700,
+                                                              color: AppColors.deleteIcon,
+                                                            ),
+                                                          ),
+                                                        ],
                                                       ),
                                                     ),
-                                                    SizedBox(width: 4),
-                                                    Icon(
-                                                      Icons.arrow_forward_ios_rounded,
-                                                      size: 12,
-                                                      color: AppColors.primaryPink,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(
+                                                      horizontal: 9, vertical: 4.5),
+                                                  decoration: BoxDecoration(
+                                                    gradient: const LinearGradient(
+                                                      colors: [Color(0xFFFA4468), Color(0xFFFF6584)],
+                                                      begin: Alignment.topLeft,
+                                                      end: Alignment.bottomRight,
                                                     ),
-                                                  ],
+                                                    borderRadius: BorderRadius.circular(8),
+                                                    boxShadow: [
+                                                      BoxShadow(
+                                                        color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                                                        blurRadius: 4,
+                                                        offset: const Offset(0, 1),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  child: const Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Text(
+                                                        'Track',
+                                                        style: TextStyle(
+                                                          fontSize: 11,
+                                                          fontWeight: FontWeight.w700,
+                                                          color: Colors.white,
+                                                        ),
+                                                      ),
+                                                      SizedBox(width: 3),
+                                                      Icon(
+                                                        Icons.arrow_forward_ios_rounded,
+                                                        size: 9,
+                                                        color: Colors.white,
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ],
                                             ),
@@ -670,27 +1108,41 @@ class _UserOrdersScreenState extends State<UserOrdersScreen> {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryPink : Colors.white,
+          color: isSelected ? null : const Color(0xFF1E1F24),
+          gradient: isSelected
+              ? const LinearGradient(
+                  colors: [Color(0xFFFA4468), Color(0xFFFF6584)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : null,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? AppColors.primaryPink : AppColors.inputBorder,
+            color: isSelected ? const Color(0xFFFA4468) : const Color(0xFF2E313C),
+            width: 1,
           ),
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: AppColors.primaryPink.withValues(alpha: 0.25),
-                    blurRadius: 6,
+                    color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                    blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ]
-              : null,
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 12.5,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
-            color: isSelected ? Colors.white : AppColors.textDark,
+            color: isSelected ? Colors.white : Colors.white70,
           ),
         ),
       ),

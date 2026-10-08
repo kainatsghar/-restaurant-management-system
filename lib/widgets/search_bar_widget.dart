@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 
 class SearchBarWidget extends StatelessWidget {
   final TextEditingController controller;
@@ -23,15 +22,27 @@ class SearchBarWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.searchBackground,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF18191E),
+            Color(0xFF201620),
+          ],
+        ),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: AppColors.inputBorder.withValues(alpha: 0.6),
+          color: const Color(0xFFFA4468).withValues(alpha: 0.35),
           width: 1,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: const Color(0xFFFA4468).withValues(alpha: 0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -44,26 +55,27 @@ class SearchBarWidget extends StatelessWidget {
         onChanged: onChanged,
         style: const TextStyle(
           fontSize: 15,
-          color: AppColors.textDark,
+          color: Colors.white,
           fontWeight: FontWeight.w500,
         ),
+        cursorColor: const Color(0xFFFA4468),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(
-            color: AppColors.textMuted,
+          hintStyle: TextStyle(
+            color: Colors.white.withValues(alpha: 0.4),
             fontSize: 14,
             fontWeight: FontWeight.w400,
           ),
           prefixIcon: const Icon(
             Icons.search_rounded,
-            color: AppColors.textMuted,
+            color: Color(0xFFFF5277),
             size: 22,
           ),
           suffixIcon: controller.text.isNotEmpty
               ? IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.close_rounded,
-                    color: AppColors.textMuted,
+                    color: Colors.white.withValues(alpha: 0.6),
                     size: 18,
                   ),
                   onPressed: onClear,

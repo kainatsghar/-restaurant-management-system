@@ -27,13 +27,13 @@ class AppNetworkImage extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F2),
+        color: const Color(0xFF1E1F25),
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: Center(
         child: Icon(
           fallbackIcon,
-          color: AppColors.textMuted.withValues(alpha: 0.6),
+          color: AppColors.primaryPink.withValues(alpha: 0.65),
           size: (height != null && height! > 0) ? (height! * 0.38) : 28,
         ),
       ),
@@ -114,7 +114,7 @@ class AppNetworkImage extends StatelessWidget {
               width: width,
               height: height,
               decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F2),
+                color: const Color(0xFF1E1F25),
                 borderRadius: BorderRadius.circular(borderRadius),
               ),
               child: const Center(

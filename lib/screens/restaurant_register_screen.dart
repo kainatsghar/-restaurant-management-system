@@ -6,6 +6,7 @@ import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:image_picker/image_picker.dart';
 import '../services/auth_service.dart';
+import '../services/image_service.dart';
 import 'home_menu_screen.dart';
 import 'restaurant_login_screen.dart';
 
@@ -250,11 +251,24 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
         }
       }
 
+      String uploadedLogo = '';
+      if (_logoImage != null) {
+        try {
+          uploadedLogo = await ImageService().uploadOrEncodeImage(
+            imageFile: _logoImage!,
+            folder: 'restaurants',
+            fileName: '${docId}_logo',
+          );
+        } catch (e) {
+          debugPrint('Error uploading restaurant logo: $e');
+        }
+      }
+
       // Save into 'restaurants' collection with ONLY the user requested fields
       // Strictly NO category_id, category_name, or other clutter
       final Map<String, dynamic> cleanRestaurantData = {
         'restaurant_name': restaurantName,
-        'logo_image': _logoImage != null ? _logoImage!.path : '',
+        'logo_image': uploadedLogo,
         'location': location,
         'unique_id': uniqueId,
         'restaurant_id': uniqueId,
@@ -345,19 +359,19 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
   }) {
     return InputDecoration(
       hintText: hintText,
-      hintStyle: const TextStyle(color: Color(0xFF9E9E9E), fontSize: 14),
-      prefixIcon: Icon(prefixIcon, color: const Color(0xFF8E959E), size: 20),
+      hintStyle: const TextStyle(color: Color(0xFF7A828E), fontSize: 14),
+      prefixIcon: Icon(prefixIcon, color: const Color(0xFFA0AAB5), size: 20),
       suffixIcon: suffixIcon,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       filled: true,
-      fillColor: Colors.white,
+      fillColor: const Color(0xFF141518),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE8ECEF), width: 1.2),
+        borderSide: const BorderSide(color: Color(0xFF2E313C), width: 1.2),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE8ECEF), width: 1.2),
+        borderSide: const BorderSide(color: Color(0xFF2E313C), width: 1.2),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -373,24 +387,25 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0F1015),
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          // Vertical gradient matching Screenshot: pink to lime green
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFA4468),
-              Color(0xFF86BF34),
+              Color(0xFF0F1015),
+              Color(0xFF191319),
+              Color(0xFF261822),
             ],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // Top Bar with Back Arrow matching Screenshot
+              // Top Bar with Back Arrow
               Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -423,13 +438,30 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                         vertical: 28,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF1A1B20),
+                            Color(0xFF261822),
+                            Color(0xFF381420),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: const Color(0xFFFA4468).withValues(alpha: 0.3),
+                          width: 1.2,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.12),
                             blurRadius: 28,
-                            offset: const Offset(0, 12),
+                            offset: const Offset(0, 10),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
@@ -438,13 +470,13 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Title matching screenshot
+                            // Title
                             const Text(
                               'Sign Up',
                               style: TextStyle(
                                 fontSize: 26,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFFFA4468),
+                                color: Colors.white,
                                 letterSpacing: -0.5,
                               ),
                             ),
@@ -454,13 +486,13 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Color(0xFF8E959E),
+                                color: Color(0xFFA0AAB5),
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
                             const SizedBox(height: 20),
 
-                            // Logo Image Picker (Tapping opens device gallery)
+                            // Logo Image Picker
                             Center(
                               child: Stack(
                                 children: [
@@ -470,13 +502,20 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                                       width: 86,
                                       height: 86,
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFFF0F3),
+                                        color: const Color(0xFF24151E),
                                         shape: BoxShape.circle,
                                         border: Border.all(
                                           color: const Color(0xFFFA4468)
-                                              .withValues(alpha: 0.4),
+                                              .withValues(alpha: 0.6),
                                           width: 2,
                                         ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: const Color(0xFFFA4468).withValues(alpha: 0.25),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
                                       ),
                                       child: _logoImage != null
                                           ? ClipOval(
@@ -515,7 +554,7 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                                     child: GestureDetector(
                                       onTap: _pickLogoImage,
                                       child: Container(
-                                        padding: const EdgeInsets.all(5),
+                                        padding: const EdgeInsets.all(6),
                                         decoration: const BoxDecoration(
                                           color: Color(0xFFFA4468),
                                           shape: BoxShape.circle,
@@ -537,7 +576,7 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                             TextFormField(
                               controller: _restaurantNameController,
                               style: const TextStyle(
-                                  fontSize: 14, color: Color(0xFF2C3238)),
+                                  fontSize: 14, color: Colors.white),
                               decoration: _inputDecoration(
                                 hintText: 'Restaurant Name',
                                 prefixIcon: Icons.storefront_rounded,
@@ -552,7 +591,7 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                             TextFormField(
                               controller: _locationController,
                               style: const TextStyle(
-                                  fontSize: 14, color: Color(0xFF2C3238)),
+                                  fontSize: 14, color: Colors.white),
                               decoration: _inputDecoration(
                                 hintText: 'City, Area or Live Location',
                                 prefixIcon: Icons.location_on_outlined,
@@ -606,7 +645,7 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                               controller: _descriptionController,
                               maxLines: 2,
                               style: const TextStyle(
-                                  fontSize: 14, color: Color(0xFF2C3238)),
+                                  fontSize: 14, color: Colors.white),
                               decoration: _inputDecoration(
                                 hintText: 'User Description / Details',
                                 prefixIcon: Icons.description_outlined,
@@ -622,7 +661,7 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
                               style: const TextStyle(
-                                  fontSize: 14, color: Color(0xFF2C3238)),
+                                  fontSize: 14, color: Colors.white),
                               decoration: _inputDecoration(
                                 hintText: 'Email Address',
                                 prefixIcon: Icons.email_outlined,
@@ -644,10 +683,26 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                               controller: _passwordController,
                               obscureText: !_isPasswordVisible,
                               style: const TextStyle(
-                                  fontSize: 14, color: Color(0xFF2C3238)),
-                              decoration: _inputDecoration(
+                                  fontSize: 14, color: Colors.white),
+                              decoration: InputDecoration(
                                 hintText: 'Password',
-                                prefixIcon: Icons.lock_outline_rounded,
+                                hintStyle: const TextStyle(color: Color(0xFF7A828E), fontSize: 14),
+                                prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFFA0AAB5), size: 20),
+                                filled: true,
+                                fillColor: const Color(0xFF141518),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF2E313C), width: 1.2),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFF2E313C), width: 1.2),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(color: Color(0xFFFA4468), width: 1.5),
+                                ),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _isPasswordVisible
@@ -674,16 +729,29 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                             ),
                             const SizedBox(height: 24),
 
-                            // Register Button matching screenshot
-                            SizedBox(
+                            // Register Button
+                            Container(
                               width: double.infinity,
                               height: 48,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFFA4468), Color(0xFFFF6584)],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
                               child: ElevatedButton(
                                 onPressed: _isLoading ? null : _handleRegister,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFA4468),
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
                                   foregroundColor: Colors.white,
-                                  elevation: 0,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -717,7 +785,7 @@ class _RestaurantRegisterScreenState extends State<RestaurantRegisterScreen> {
                                   'Already have an account? ',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Color(0xFF8E959E),
+                                    color: Color(0xFFA0AAB5),
                                   ),
                                 ),
                                 GestureDetector(

@@ -154,13 +154,19 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                           width: 38,
                           height: 38,
                           decoration: BoxDecoration(
-                            color: AppColors.primaryPink,
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFFFA4468),
+                                Color(0xFFFF6283),
+                              ],
+                            ),
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.primaryPink
-                                    .withValues(alpha: 0.35),
-                                blurRadius: 8,
+                                color: const Color(0xFFFA4468).withValues(alpha: 0.4),
+                                blurRadius: 10,
                                 offset: const Offset(0, 3),
                               ),
                             ],
@@ -208,17 +214,23 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                     .collection('categories')
                     .snapshots()
                     .map((snapshot) {
-                      final currentUid = FirebaseAuth.instance.currentUser?.uid;
+                      final user = FirebaseAuth.instance.currentUser;
+                      final currentUid = user?.uid;
+                      final currentEmail = user?.email?.trim().toLowerCase() ?? '';
                       if (currentUid == null) return <Map<String, dynamic>>[];
                       return snapshot.docs
                           .where((doc) {
                             final data = doc.data();
-                            final restId = (data['restaurant_id'] ?? '').toString();
-                            final userId = (data['user_id'] ?? '').toString();
-                            return _restaurantIds.contains(restId) ||
-                                _restaurantIds.contains(userId) ||
-                                restId == currentUid ||
-                                userId == currentUid;
+                            final restId = (data['restaurant_id'] ?? '').toString().trim();
+                            final userId = (data['user_id'] ?? '').toString().trim();
+                            final email = (data['email'] ?? data['owner_email'] ?? '').toString().trim().toLowerCase();
+                            final restName = (data['restaurant_name'] ?? '').toString().trim().toLowerCase();
+                            return (restId.isNotEmpty && _restaurantIds.contains(restId)) ||
+                                (userId.isNotEmpty && _restaurantIds.contains(userId)) ||
+                                (email.isNotEmpty && (email == currentEmail || _restaurantIds.contains(email))) ||
+                                (restName.isNotEmpty && _restaurantIds.contains(restName)) ||
+                                (restId.isNotEmpty && restId == currentUid) ||
+                                (userId.isNotEmpty && userId == currentUid);
                           })
                           .map((doc) {
                             final data = doc.data();

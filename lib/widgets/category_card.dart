@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 import 'app_network_image.dart';
 
 class CategoryCard extends StatelessWidget {
@@ -22,11 +21,27 @@ class CategoryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF18191E),
+            Color(0xFF201620),
+          ],
+        ),
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+          width: 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: const Color(0xFFFA4468).withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 3),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -49,7 +64,7 @@ class CategoryCard extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
 
             // Category Name
             Text(
@@ -59,7 +74,7 @@ class CategoryCard extends StatelessWidget {
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textDark,
+                color: Colors.white,
                 letterSpacing: -0.2,
               ),
             ),
@@ -70,15 +85,15 @@ class CategoryCard extends StatelessWidget {
                 type!.trim(),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.textMuted,
+                  color: Colors.white.withValues(alpha: 0.6),
                 ),
               ),
             ],
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
 
             // Action Buttons: Edit (Green) & Delete (Pink)
             Row(
@@ -91,8 +106,22 @@ class CategoryCard extends StatelessWidget {
                     child: Container(
                       height: 28,
                       decoration: BoxDecoration(
-                        color: AppColors.editGreen,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFFFA4468),
+                            Color(0xFFFF6283),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -126,14 +155,18 @@ class CategoryCard extends StatelessWidget {
                     width: 32,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: AppColors.deleteBg,
+                      color: const Color(0xFFFA4468).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                        width: 1.0,
+                      ),
                     ),
                     child: const Center(
                       child: Icon(
                         Icons.delete_outline_rounded,
                         size: 16,
-                        color: AppColors.deleteIcon,
+                        color: Color(0xFFFF5277),
                       ),
                     ),
                   ),

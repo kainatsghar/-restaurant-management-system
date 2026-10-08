@@ -130,6 +130,22 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
       // Distinct unique category ID
       final String categoryId = docId;
 
+      String restName = '';
+      if (currentUser != null) {
+        try {
+          final rDoc = await FirebaseFirestore.instance
+              .collection('restaurants')
+              .doc(currentUser.uid)
+              .get();
+          if (rDoc.exists && rDoc.data() != null) {
+            restName = (rDoc.data()!['restaurant_name'] ??
+                    rDoc.data()!['name'] ??
+                    '')
+                .toString();
+          }
+        } catch (_) {}
+      }
+
       // Upload selected image (or fallback to local file path)
       final String imageUrl = await _uploadImage(timestamp);
 
@@ -140,6 +156,9 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
         'category_type': type.isNotEmpty ? type : (_isSpecial ? 'Special Deals' : 'General'),
         'restaurant_id': restaurantId,
         'user_id': currentUser?.uid ?? restaurantId,
+        'email': currentUser?.email?.trim().toLowerCase() ?? '',
+        'owner_email': currentUser?.email?.trim().toLowerCase() ?? '',
+        'restaurant_name': restName,
         'cat_pic': imageUrl,
         'is_special': _isSpecial,
         'special_tag': _specialTagController.text.trim(),
@@ -253,11 +272,22 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF18191E),
+                            Color(0xFF201620),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                          width: 1,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -267,13 +297,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                         controller: _nameController,
                         style: const TextStyle(
                           fontSize: 15,
-                          color: AppColors.textDark,
+                          color: Colors.white,
                           fontWeight: FontWeight.w500,
                         ),
+                        cursorColor: const Color(0xFFFA4468),
                         decoration: InputDecoration(
                           hintText: 'e.g. Burgers, Drinks, Desserts',
                           hintStyle: TextStyle(
-                            color: AppColors.textMuted.withValues(alpha: 0.8),
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
                           ),
@@ -281,10 +312,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                             horizontal: 16,
                             vertical: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
+                          border: InputBorder.none,
                         ),
                       ),
                     ),
@@ -303,11 +331,22 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF18191E),
+                            Color(0xFF201620),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                          width: 1,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -317,13 +356,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                         controller: _typeController,
                         style: const TextStyle(
                           fontSize: 15,
-                          color: AppColors.textDark,
+                          color: Colors.white,
                           fontWeight: FontWeight.w500,
                         ),
+                        cursorColor: const Color(0xFFFA4468),
                         decoration: InputDecoration(
                           hintText: 'Enter or select category type',
                           hintStyle: TextStyle(
-                            color: AppColors.textMuted.withValues(alpha: 0.8),
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
                           ),
@@ -331,10 +371,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                             horizontal: 16,
                             vertical: 16,
                           ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: BorderSide.none,
-                          ),
+                          border: InputBorder.none,
                         ),
                       ),
                     ),
@@ -355,18 +392,18 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                               fontWeight: FontWeight.w600,
                               color: isSelected
                                   ? Colors.white
-                                  : AppColors.textDark,
+                                  : Colors.white.withValues(alpha: 0.85),
                             ),
                           ),
                           selected: isSelected,
                           selectedColor: AppColors.primaryPink,
-                          backgroundColor: Colors.white,
+                          backgroundColor: const Color(0xFF1B1C22),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(20),
                             side: BorderSide(
                               color: isSelected
                                   ? AppColors.primaryPink
-                                  : Colors.black.withValues(alpha: 0.08),
+                                  : const Color(0xFFFA4468).withValues(alpha: 0.3),
                             ),
                           ),
                           onSelected: (selected) {
@@ -386,21 +423,26 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: _isSpecial
-                            ? AppColors.primaryPink.withValues(alpha: 0.05)
-                            : Colors.white,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF18191E),
+                            Color(0xFF201620),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
                           color: _isSpecial
                               ? AppColors.primaryPink
-                              : Colors.black.withValues(alpha: 0.07),
+                              : const Color(0xFFFA4468).withValues(alpha: 0.35),
                           width: _isSpecial ? 1.5 : 1,
                         ),
                         boxShadow: [
                           BoxShadow(
                             color: _isSpecial
-                                ? AppColors.primaryPink.withValues(alpha: 0.08)
-                                : Colors.black.withValues(alpha: 0.02),
+                                ? AppColors.primaryPink.withValues(alpha: 0.15)
+                                : const Color(0xFFFA4468).withValues(alpha: 0.08),
                             blurRadius: 10,
                             offset: const Offset(0, 3),
                           ),
@@ -417,14 +459,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                                 decoration: BoxDecoration(
                                   color: _isSpecial
                                       ? AppColors.primaryPink
-                                      : const Color(0xFFFFF3E0),
+                                      : const Color(0xFFFA4468).withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                                 child: Icon(
                                   Icons.local_fire_department_rounded,
                                   color: _isSpecial
                                       ? Colors.white
-                                      : const Color(0xFFFFA000),
+                                      : const Color(0xFFFF5277),
                                   size: 20,
                                 ),
                               ),
@@ -438,14 +480,14 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                                       style: TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.textDark,
+                                        color: Colors.white,
                                       ),
                                     ),
                                     Text(
                                       'Will appear in user Special Deals page',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: AppColors.textMuted,
+                                        color: Colors.white60,
                                       ),
                                     ),
                                   ],
@@ -453,6 +495,7 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                               ),
                               Switch.adaptive(
                                 value: _isSpecial,
+                                activeThumbColor: Colors.white,
                                 activeTrackColor: AppColors.primaryPink,
                                 onChanged: (val) {
                                   setState(() {
@@ -468,7 +511,10 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
 
                           if (_isSpecial) ...[
                             const SizedBox(height: 14),
-                            const Divider(height: 1),
+                            Divider(
+                              height: 1,
+                              color: Colors.white.withValues(alpha: 0.08),
+                            ),
                             const SizedBox(height: 14),
 
                             // Special Tag Input (e.g. "20% OFF", "Chef Special")
@@ -477,17 +523,17 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textDark,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 6),
                             Container(
                               height: 46,
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: const Color(0xFF141518),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: AppColors.inputBorder,
+                                  color: const Color(0xFFFA4468).withValues(alpha: 0.35),
                                   width: 1,
                                 ),
                               ),
@@ -495,22 +541,23 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                                 controller: _specialTagController,
                                 style: const TextStyle(
                                   fontSize: 13.5,
-                                  color: AppColors.textDark,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w500,
                                 ),
-                                decoration: const InputDecoration(
+                                cursorColor: const Color(0xFFFA4468),
+                                decoration: InputDecoration(
                                   hintText: 'e.g. 20% OFF, Chef Special, Hot Deal',
                                   hintStyle: TextStyle(
-                                    color: AppColors.textMuted,
+                                    color: Colors.white.withValues(alpha: 0.4),
                                     fontSize: 13,
                                   ),
-                                  prefixIcon: Icon(
+                                  prefixIcon: const Icon(
                                     Icons.discount_outlined,
                                     size: 18,
-                                    color: AppColors.primaryPink,
+                                    color: Color(0xFFFF5277),
                                   ),
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
+                                  contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 12,
                                     vertical: 12,
                                   ),
@@ -526,17 +573,17 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: AppColors.textDark,
+                                color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 6),
                             Container(
                               height: 46,
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: const Color(0xFF141518),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: AppColors.inputBorder,
+                                  color: const Color(0xFFFA4468).withValues(alpha: 0.35),
                                   width: 1,
                                 ),
                               ),
@@ -544,22 +591,23 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                                 controller: _specialDiscountController,
                                 style: const TextStyle(
                                   fontSize: 13.5,
-                                  color: AppColors.textDark,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w500,
                                 ),
-                                decoration: const InputDecoration(
+                                cursorColor: const Color(0xFFFA4468),
+                                decoration: InputDecoration(
                                   hintText: 'e.g. Free drink on order above Rs. 1000',
                                   hintStyle: TextStyle(
-                                    color: AppColors.textMuted,
+                                    color: Colors.white.withValues(alpha: 0.4),
                                     fontSize: 13,
                                   ),
-                                  prefixIcon: Icon(
+                                  prefixIcon: const Icon(
                                     Icons.stars_rounded,
                                     size: 18,
-                                    color: AppColors.primaryPink,
+                                    color: Color(0xFFFF5277),
                                   ),
                                   border: InputBorder.none,
-                                  contentPadding: EdgeInsets.symmetric(
+                                  contentPadding: const EdgeInsets.symmetric(
                                     horizontal: 12,
                                     vertical: 12,
                                   ),
@@ -591,16 +639,22 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                         width: double.infinity,
                         height: 200,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF18191E),
+                              Color(0xFF201620),
+                            ],
+                          ),
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
-                            color: AppColors.editGreen.withValues(alpha: 0.6),
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.45),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color:
-                                  AppColors.editGreen.withValues(alpha: 0.06),
+                              color: const Color(0xFFFA4468).withValues(alpha: 0.1),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -654,29 +708,29 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                                   ),
                                 ],
                               )
-                            : const Column(
+                            : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.cloud_upload_outlined,
                                     size: 56,
-                                    color: AppColors.editGreen,
+                                    color: Color(0xFFFF5277),
                                   ),
-                                  SizedBox(height: 10),
-                                  Text(
+                                  const SizedBox(height: 10),
+                                  const Text(
                                     'Upload Image',
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w700,
-                                      color: AppColors.editGreen,
+                                      color: Color(0xFFFF5277),
                                     ),
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'Tap to select from gallery',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: AppColors.textMuted,
+                                      color: Colors.white.withValues(alpha: 0.6),
                                     ),
                                   ),
                                 ],
@@ -687,13 +741,32 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                     const SizedBox(height: 24),
 
                     // Full-width Pink Save Button
-                    SizedBox(
+                    Container(
                       width: double.infinity,
                       height: 52,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFFFA4468),
+                            Color(0xFFFF6283),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : addCategory,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryPink,
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),

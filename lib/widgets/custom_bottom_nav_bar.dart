@@ -31,12 +31,28 @@ class CustomBottomNavBar extends StatelessWidget {
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 10),
         height: 64,
         decoration: BoxDecoration(
-          color: Colors.white,
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF16171B),
+              Color(0xFF1F151F),
+            ],
+          ),
           borderRadius: BorderRadius.circular(32),
+          border: Border.all(
+            color: const Color(0xFFFA4468).withValues(alpha: 0.45),
+            width: 1.0,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: 20,
+              color: const Color(0xFFFA4468).withValues(alpha: 0.15),
+              blurRadius: 18,
+              offset: const Offset(0, 4),
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 16,
               offset: const Offset(0, 4),
             ),
           ],
@@ -67,8 +83,8 @@ class CustomBottomNavBar extends StatelessWidget {
       child: InkWell(
         onTap: () => onTap(index),
         borderRadius: BorderRadius.circular(32),
-        splashColor: AppColors.primaryPink.withValues(alpha: 0.15),
-        highlightColor: AppColors.primaryPink.withValues(alpha: 0.08),
+        splashColor: AppColors.primaryPink.withValues(alpha: 0.2),
+        highlightColor: AppColors.primaryPink.withValues(alpha: 0.1),
         child: SizedBox(
           height: 64,
           child: Center(
@@ -77,12 +93,19 @@ class CustomBottomNavBar extends StatelessWidget {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: AppColors.primaryPink,
+                      gradient: const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Color(0xFFFA4468),
+                          Color(0xFFFF6283),
+                        ],
+                      ),
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.primaryPink.withValues(alpha: 0.35),
-                          blurRadius: 8,
+                          color: const Color(0xFFFA4468).withValues(alpha: 0.45),
+                          blurRadius: 10,
                           offset: const Offset(0, 3),
                         ),
                       ],
@@ -98,7 +121,7 @@ class CustomBottomNavBar extends StatelessWidget {
                     height: 46,
                     child: Icon(
                       icon,
-                      color: AppColors.textMuted.withValues(alpha: 0.8),
+                      color: Colors.white.withValues(alpha: 0.55),
                       size: 26,
                     ),
                   ),

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -24,6 +25,42 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   String _searchQuery = '';
+
+  static String getRestaurantFallbackImage(String restaurantName, [String docId = '']) {
+    final nameLower = restaurantName.toLowerCase().trim();
+    if (nameLower.contains('coffee') || nameLower.contains('cafe') || nameLower.contains('tea')) {
+      return 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=500&auto=format&fit=crop&q=80';
+    } else if (nameLower.contains('burger') || nameLower.contains('fast') || nameLower.contains('kfc') || nameLower.contains('crispy')) {
+      return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=80';
+    } else if (nameLower.contains('pizza') || nameLower.contains('piza') || nameLower.contains('italian')) {
+      return 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=80';
+    } else if (nameLower.contains('bbq') || nameLower.contains('meat') || nameLower.contains('grill') || nameLower.contains('steak') || nameLower.contains('tikka')) {
+      return 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=500&auto=format&fit=crop&q=80';
+    } else if (nameLower.contains('biryani') || nameLower.contains('rice') || nameLower.contains('karahi') || nameLower.contains('desi') || nameLower.contains('spice')) {
+      return 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80';
+    } else if (nameLower.contains('cake') || nameLower.contains('sweet') || nameLower.contains('baker') || nameLower.contains('dessert')) {
+      return 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=80';
+    }
+
+    final curated = [
+      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1550547660-d9450f859349?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1578474846511-04ba529f0b88?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=500&auto=format&fit=crop&q=80',
+    ];
+    final hash = (restaurantName + docId).hashCode.abs();
+    return curated[hash % curated.length];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    AuthService().deletePizzaCategoryAndItems();
+  }
 
   @override
   void dispose() {
@@ -77,14 +114,34 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
     );
   }
 
+  String _getEffectiveImageUrl(String url, String restaurantName, [String docId = '']) {
+    String finalUrl = url.trim();
+    if (finalUrl.isEmpty) {
+      return getRestaurantFallbackImage(restaurantName, docId);
+    } else if (!finalUrl.startsWith('http') && !finalUrl.startsWith('data:image') && finalUrl.length < 200) {
+      try {
+        if (!File(finalUrl).existsSync()) {
+          return getRestaurantFallbackImage(restaurantName, docId);
+        }
+      } catch (_) {
+        return getRestaurantFallbackImage(restaurantName, docId);
+      }
+    }
+    return finalUrl;
+  }
+
   Widget _buildRestaurantImage(
     String url, {
+    required String restaurantName,
+    String docId = '',
     required double width,
     required double height,
     required double borderRadius,
   }) {
+    final finalUrl = _getEffectiveImageUrl(url, restaurantName, docId);
+
     return AppNetworkImage(
-      imageUrl: url,
+      imageUrl: finalUrl,
       width: width,
       height: height,
       borderRadius: borderRadius,
@@ -312,16 +369,20 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                         index % 3 == 0 ? 'Free' : 'Rs. 139';
 
                     return Container(
-                      width: 156,
+                      width: 158,
                       margin: const EdgeInsets.symmetric(horizontal: 5, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: const Color(0xFF1E1F24),
                         borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: const Color(0xFF2E313C),
+                          width: 1,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
+                            color: Colors.black.withValues(alpha: 0.18),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
                         ],
                       ),
@@ -371,8 +432,12 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 6, vertical: 2.5),
                                         decoration: BoxDecoration(
-                                          color: Colors.black.withValues(alpha: 0.65),
+                                          color: Colors.black.withValues(alpha: 0.7),
                                           borderRadius: BorderRadius.circular(6),
+                                          border: Border.all(
+                                            color: Colors.white.withValues(alpha: 0.15),
+                                            width: 0.5,
+                                          ),
                                         ),
                                         child: Text(
                                           deliveryTime,
@@ -400,22 +465,23 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(
                                           fontSize: 11,
-                                          color: AppColors.textMuted,
+                                          color: Colors.white70,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                     ),
                                     const Icon(
                                       Icons.star_rounded,
-                                      color: Colors.amber,
+                                      color: Color(0xFFFFA000),
                                       size: 13,
                                     ),
+                                    const SizedBox(width: 1),
                                     Text(
                                       rating.toStringAsFixed(1),
                                       style: const TextStyle(
                                         fontSize: 10.5,
                                         fontWeight: FontWeight.w700,
-                                        color: AppColors.textDark,
+                                        color: Colors.white,
                                       ),
                                     ),
                                   ],
@@ -430,7 +496,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                   style: const TextStyle(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.textDark,
+                                    color: Colors.white,
                                     letterSpacing: -0.2,
                                   ),
                                 ),
@@ -444,8 +510,9 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                         'Rs.${originalPrice.toStringAsFixed(0)}',
                                         style: const TextStyle(
                                           fontSize: 11,
-                                          color: AppColors.textMuted,
+                                          color: Colors.white38,
                                           decoration: TextDecoration.lineThrough,
+                                          decorationColor: Colors.white38,
                                           fontWeight: FontWeight.w500,
                                         ),
                                       ),
@@ -454,7 +521,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 4, vertical: 1),
                                         decoration: BoxDecoration(
-                                          color: AppColors.primaryPink.withValues(alpha: 0.12),
+                                          color: AppColors.primaryPink.withValues(alpha: 0.25),
                                           borderRadius: BorderRadius.circular(4),
                                         ),
                                         child: Text(
@@ -462,7 +529,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                           style: const TextStyle(
                                             fontSize: 9.5,
                                             fontWeight: FontWeight.w800,
-                                            color: AppColors.primaryPink,
+                                            color: Color(0xFFFF5277),
                                           ),
                                         ),
                                       ),
@@ -480,7 +547,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                       style: const TextStyle(
                                         fontSize: 13.5,
                                         fontWeight: FontWeight.w800,
-                                        color: AppColors.primaryPink,
+                                        color: Color(0xFFFF5277),
                                       ),
                                     ),
                                     Row(
@@ -489,14 +556,14 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                         const Icon(
                                           Icons.two_wheeler_rounded,
                                           size: 12,
-                                          color: AppColors.textMuted,
+                                          color: Colors.white54,
                                         ),
                                         const SizedBox(width: 2),
                                         Text(
                                           deliveryFee,
                                           style: const TextStyle(
                                             fontSize: 10,
-                                            color: AppColors.textMuted,
+                                            color: Colors.white60,
                                             fontWeight: FontWeight.w500,
                                           ),
                                         ),
@@ -597,15 +664,15 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: const Color(0xFF1E1F24),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.inputBorder,
+                                color: const Color(0xFF2E313C),
                                 width: 1,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
+                                  color: Colors.black.withValues(alpha: 0.12),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -637,15 +704,15 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: const Color(0xFF1E1F24),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.inputBorder,
+                                color: const Color(0xFF2E313C),
                                 width: 1,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
+                                  color: Colors.black.withValues(alpha: 0.12),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -678,16 +745,16 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: AppColors.primaryPink.withValues(alpha: 0.1),
+                              color: const Color(0xFF1E1F24),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.primaryPink.withValues(alpha: 0.3),
-                                width: 1,
+                                color: AppColors.primaryPink.withValues(alpha: 0.45),
+                                width: 1.2,
                               ),
                               boxShadow: [
                                 BoxShadow(
                                   color: AppColors.primaryPink
-                                      .withValues(alpha: 0.08),
+                                      .withValues(alpha: 0.15),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -713,15 +780,15 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                             width: 42,
                             height: 42,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: const Color(0xFF1E1F24),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.inputBorder,
+                                color: const Color(0xFF2E313C),
                                 width: 1,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.04),
+                                  color: Colors.black.withValues(alpha: 0.12),
                                   blurRadius: 8,
                                   offset: const Offset(0, 2),
                                 ),
@@ -747,15 +814,15 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
               child: Container(
                 height: 48,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFF1E1F24),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: AppColors.inputBorder,
+                    color: const Color(0xFF2E313C),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -771,13 +838,13 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                   },
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppColors.textDark,
+                    color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Search restaurants by name or city...',
                     hintStyle: const TextStyle(
-                      color: AppColors.textMuted,
+                      color: Color(0xFF8E92A0),
                       fontSize: 13.5,
                     ),
                     prefixIcon: const Icon(
@@ -789,7 +856,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                         ? IconButton(
                             icon: const Icon(
                               Icons.clear_rounded,
-                              color: AppColors.textMuted,
+                              color: Colors.white60,
                               size: 18,
                             ),
                             onPressed: () {
@@ -820,15 +887,28 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                       margin: const EdgeInsets.fromLTRB(20, 10, 20, 16),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFFFA4468), Color(0xFFFF7A8A)],
+                          colors: [
+                            Color(0xFF1A1B20), // Deep obsidian charcoal
+                            Color(0xFF2E1624), // Rich dark plum/rose
+                            Color(0xFF7A152E), // Deep crimson/pink accent
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppColors.primaryPink.withValues(alpha: 0.35),
+                          width: 1.2,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: AppColors.primaryPink.withValues(alpha: 0.3),
-                            blurRadius: 12,
+                            color: AppColors.primaryPink.withValues(alpha: 0.22),
+                            blurRadius: 16,
+                            offset: const Offset(0, 6),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.25),
+                            blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
                         ],
@@ -856,27 +936,48 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                         children: [
                                           Container(
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 3),
+                                                horizontal: 9, vertical: 4),
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withValues(alpha: 0.25),
-                                              borderRadius: BorderRadius.circular(8),
+                                              gradient: const LinearGradient(
+                                                colors: [
+                                                  Color(0xFFFA4468),
+                                                  Color(0xFFFF6584)
+                                                ],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: AppColors.primaryPink
+                                                      .withValues(alpha: 0.4),
+                                                  blurRadius: 6,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ],
                                             ),
                                             child: const Text(
                                               'Special Deal 🔥',
                                               style: TextStyle(
                                                 color: Colors.white,
                                                 fontSize: 11,
-                                                fontWeight: FontWeight.w700,
+                                                fontWeight: FontWeight.w800,
                                               ),
                                             ),
                                           ),
                                           const SizedBox(width: 8),
                                           Container(
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 3),
+                                                horizontal: 8, vertical: 4),
                                             decoration: BoxDecoration(
-                                              color: Colors.black.withValues(alpha: 0.15),
-                                              borderRadius: BorderRadius.circular(8),
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.4),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: Border.all(
+                                                color: Colors.white
+                                                    .withValues(alpha: 0.15),
+                                                width: 0.8,
+                                              ),
                                             ),
                                             child: const Row(
                                               mainAxisSize: MainAxisSize.min,
@@ -892,7 +993,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                                 SizedBox(width: 3),
                                                 Icon(
                                                   Icons.arrow_forward_ios_rounded,
-                                                  color: Colors.white,
+                                                  color: Color(0xFFFF6584),
                                                   size: 9,
                                                 ),
                                               ],
@@ -900,12 +1001,12 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 10),
                                       const Text(
                                         'Explore Delicious Menus',
                                         style: TextStyle(
                                           color: Colors.white,
-                                          fontSize: 17,
+                                          fontSize: 17.5,
                                           fontWeight: FontWeight.w800,
                                           letterSpacing: -0.2,
                                         ),
@@ -914,7 +1015,8 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                       Text(
                                         'Tap here to view all special deals & hot offers from all restaurants!',
                                         style: TextStyle(
-                                          color: Colors.white.withValues(alpha: 0.9),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.88),
                                           fontSize: 12,
                                           height: 1.3,
                                         ),
@@ -924,16 +1026,37 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                 ),
                                 const SizedBox(width: 10),
                                 Container(
-                                  width: 60,
-                                  height: 60,
+                                  width: 62,
+                                  height: 62,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withValues(alpha: 0.2),
+                                    gradient: LinearGradient(
+                                      colors: [
+                                        AppColors.primaryPink
+                                            .withValues(alpha: 0.35),
+                                        Colors.black.withValues(alpha: 0.5),
+                                      ],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
                                     shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: AppColors.primaryPink
+                                          .withValues(alpha: 0.5),
+                                      width: 1.5,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.primaryPink
+                                            .withValues(alpha: 0.3),
+                                        blurRadius: 10,
+                                        offset: const Offset(0, 3),
+                                      ),
+                                    ],
                                   ),
                                   child: const Center(
                                     child: Icon(
                                       Icons.local_fire_department_rounded,
-                                      color: Colors.white,
+                                      color: Color(0xFFFF6584),
                                       size: 34,
                                     ),
                                   ),
@@ -1077,10 +1200,10 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                 horizontal: 20, vertical: 16),
                             padding: const EdgeInsets.all(28),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: const Color(0xFF1E1F24),
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: const Color(0xFFF1F3F5),
+                                color: const Color(0xFF2E313C),
                                 width: 1,
                               ),
                             ),
@@ -1088,11 +1211,10 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.storefront_outlined,
                                     size: 42,
-                                    color: AppColors.textMuted
-                                        .withValues(alpha: 0.5),
+                                    color: Colors.white38,
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
@@ -1103,7 +1225,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                     style: const TextStyle(
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
-                                      color: AppColors.textMuted,
+                                      color: Colors.white70,
                                     ),
                                   ),
                                 ],
@@ -1134,17 +1256,30 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 14),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF1A1B20), // Deep obsidian charcoal
+                                    Color(0xFF261822), // Dark plum/rose undertone
+                                    Color(0xFF381420), // Subtle pinkish-dark glow
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                                 borderRadius: BorderRadius.circular(18),
                                 border: Border.all(
-                                  color: const Color(0xFFF1F3F5),
-                                  width: 1,
+                                  color: AppColors.primaryPink.withValues(alpha: 0.28),
+                                  width: 1.1,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.035),
+                                    color: Colors.black.withValues(alpha: 0.2),
                                     blurRadius: 10,
-                                    offset: const Offset(0, 3),
+                                    offset: const Offset(0, 4),
+                                  ),
+                                  BoxShadow(
+                                    color: AppColors.primaryPink.withValues(alpha: 0.08),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
@@ -1160,7 +1295,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                         builder: (_) => RestaurantDetailScreen(
                                           restaurantId: id,
                                           restaurantName: name,
-                                          logoImage: logo,
+                                          logoImage: _getEffectiveImageUrl(logo, name, id),
                                           location: loc,
                                           description: desc,
                                           phone: phone.isNotEmpty ? phone : null,
@@ -1179,6 +1314,8 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                         // Restaurant Logo
                                         _buildRestaurantImage(
                                           logo,
+                                          restaurantName: name,
+                                          docId: id,
                                           width: 82,
                                           height: 82,
                                           borderRadius: 14,
@@ -1203,8 +1340,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                                         fontSize: 16,
                                                         fontWeight:
                                                             FontWeight.w700,
-                                                        color:
-                                                            AppColors.textDark,
+                                                        color: Colors.white,
                                                       ),
                                                       maxLines: 1,
                                                       overflow:
@@ -1215,13 +1351,16 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                                     padding: const EdgeInsets
                                                         .symmetric(
                                                         horizontal: 7,
-                                                        vertical: 2),
+                                                        vertical: 2.5),
                                                     decoration: BoxDecoration(
-                                                      color:
-                                                          const Color(0xFFFFF3E0),
+                                                      color: Colors.black.withValues(alpha: 0.45),
                                                       borderRadius:
                                                           BorderRadius.circular(
-                                                              6),
+                                                              7),
+                                                      border: Border.all(
+                                                        color: const Color(0xFFFFA000).withValues(alpha: 0.35),
+                                                        width: 0.8,
+                                                      ),
                                                     ),
                                                     child: Row(
                                                       mainAxisSize:
@@ -1242,8 +1381,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                                             fontSize: 11,
                                                             fontWeight:
                                                                 FontWeight.bold,
-                                                            color: Color(
-                                                                0xFFE65100),
+                                                            color: Colors.white,
                                                           ),
                                                         ),
                                                       ],
@@ -1260,8 +1398,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                                     const Icon(
                                                       Icons.location_on_rounded,
                                                       size: 13,
-                                                      color:
-                                                          AppColors.primaryPink,
+                                                      color: Color(0xFFFF6584),
                                                     ),
                                                     const SizedBox(width: 3),
                                                     Expanded(
@@ -1269,8 +1406,7 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                                         loc,
                                                         style: const TextStyle(
                                                           fontSize: 12,
-                                                          color: AppColors
-                                                              .textMuted,
+                                                          color: Colors.white70,
                                                           fontWeight:
                                                               FontWeight.w500,
                                                         ),
@@ -1286,9 +1422,9 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                               // Description / Cuisine
                                               Text(
                                                 desc,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 11.5,
-                                                  color: AppColors.textMuted,
+                                                  color: Colors.white.withValues(alpha: 0.65),
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
@@ -1304,15 +1440,28 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                                     padding: const EdgeInsets
                                                         .symmetric(
                                                         horizontal: 10,
-                                                        vertical: 4),
+                                                        vertical: 4.5),
                                                     decoration: BoxDecoration(
-                                                      color: AppColors
-                                                          .primaryPink
-                                                          .withValues(
-                                                              alpha: 0.1),
+                                                      gradient: const LinearGradient(
+                                                        colors: [
+                                                          Color(0xFFFA4468),
+                                                          Color(0xFFFF6584),
+                                                        ],
+                                                      ),
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               8),
+                                                      boxShadow: [
+                                                        BoxShadow(
+                                                          color: AppColors
+                                                              .primaryPink
+                                                              .withValues(
+                                                                  alpha: 0.35),
+                                                          blurRadius: 6,
+                                                          offset: const Offset(
+                                                              0, 2),
+                                                        ),
+                                                      ],
                                                     ),
                                                     child: const Row(
                                                       mainAxisSize:
@@ -1323,18 +1472,16 @@ class _UserRestaurantsScreenState extends State<UserRestaurantsScreen> {
                                                           style: TextStyle(
                                                             fontSize: 11.5,
                                                             fontWeight:
-                                                                FontWeight.w700,
-                                                            color: AppColors
-                                                                .primaryPink,
+                                                                FontWeight.w800,
+                                                            color: Colors.white,
                                                           ),
                                                         ),
                                                         SizedBox(width: 4),
                                                         Icon(
                                                           Icons
                                                               .arrow_forward_ios_rounded,
-                                                          size: 10,
-                                                          color: AppColors
-                                                              .primaryPink,
+                                                          size: 9.5,
+                                                          color: Colors.white,
                                                         ),
                                                       ],
                                                     ),

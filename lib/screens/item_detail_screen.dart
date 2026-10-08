@@ -242,7 +242,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
         final imageHeight = screenHeight * 0.44;
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: const Color(0xFF0F1015),
           body: Stack(
             children: [
               // 1. Food Image in the background (bottom layer)
@@ -266,9 +266,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                           begin: Alignment.topCenter,
                           end: Alignment.bottomCenter,
                           colors: [
-                            Colors.black.withValues(alpha: 0.45),
+                            Colors.black.withValues(alpha: 0.6),
                             Colors.transparent,
-                            Colors.black.withValues(alpha: 0.25),
+                            const Color(0xFF0F1015).withValues(alpha: 0.8),
                           ],
                           stops: const [0.0, 0.45, 1.0],
                         ),
@@ -287,20 +287,37 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                       // Transparent space to reveal image
                       SizedBox(height: imageHeight - 24),
 
-                      // Overlapping Details Card (Top Card)
+                      // Overlapping Details Card (Black + Pink Combo Card)
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF1A1B20),
+                              Color(0xFF261822),
+                              Color(0xFF381420),
+                            ],
+                          ),
                           borderRadius: const BorderRadius.only(
                             topLeft: Radius.circular(32),
                             topRight: Radius.circular(32),
                           ),
+                          border: Border.all(
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.3),
+                            width: 1.2,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 20,
+                              color: const Color(0xFFFA4468).withValues(alpha: 0.12),
+                              blurRadius: 28,
                               offset: const Offset(0, -6),
+                            ),
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              blurRadius: 20,
+                              offset: const Offset(0, -4),
                             ),
                           ],
                         ),
@@ -314,14 +331,14 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                 width: 44,
                                 height: 5,
                                 decoration: BoxDecoration(
-                                  color: Colors.grey.shade300,
+                                  color: const Color(0xFFFA4468).withValues(alpha: 0.4),
                                   borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
                             ),
 
                             Padding(
-                              padding: const EdgeInsets.fromLTRB(22, 10, 22, 100),
+                              padding: const EdgeInsets.fromLTRB(22, 10, 22, 110),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -336,17 +353,22 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                           vertical: 6,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: AppColors.primaryPink
-                                              .withValues(alpha: 0.12),
+                                          color: const Color(0xFFFA4468)
+                                              .withValues(alpha: 0.15),
                                           borderRadius:
                                               BorderRadius.circular(20),
+                                          border: Border.all(
+                                            color: const Color(0xFFFA4468)
+                                                .withValues(alpha: 0.35),
+                                            width: 1,
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             const Icon(
                                               Icons.local_fire_department_rounded,
-                                              color: AppColors.primaryPink,
+                                              color: Color(0xFFFA4468),
                                               size: 15,
                                             ),
                                             const SizedBox(width: 4),
@@ -355,7 +377,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                               style: const TextStyle(
                                                 fontSize: 12,
                                                 fontWeight: FontWeight.w700,
-                                                color: AppColors.primaryPink,
+                                                color: Color(0xFFFA4468),
                                               ),
                                             ),
                                           ],
@@ -365,13 +387,17 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                         width: 36,
                                         height: 36,
                                         decoration: BoxDecoration(
-                                          color: AppColors.background,
+                                          color: const Color(0xFF1E1F24),
                                           borderRadius:
                                               BorderRadius.circular(10),
+                                          border: Border.all(
+                                            color: const Color(0xFF2E313C),
+                                            width: 1,
+                                          ),
                                         ),
                                         child: const Icon(
                                           Icons.grid_view_rounded,
-                                          color: AppColors.textMuted,
+                                          color: Color(0xFFA0AAB5),
                                           size: 18,
                                         ),
                                       ),
@@ -386,7 +412,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                     style: const TextStyle(
                                       fontSize: 24,
                                       fontWeight: FontWeight.w900,
-                                      color: AppColors.textDark,
+                                      color: Colors.white,
                                       letterSpacing: -0.5,
                                     ),
                                   ),
@@ -400,29 +426,29 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
                                     children: [
-                                      Row(
+                                      const Row(
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             Icons.star_rounded,
                                             color: Color(0xFFFFB800),
                                             size: 20,
                                           ),
-                                          const SizedBox(width: 4),
-                                          const Text(
+                                          SizedBox(width: 4),
+                                          Text(
                                             '4.8',
                                             style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w800,
-                                              color: AppColors.textDark,
+                                              color: Colors.white,
                                             ),
                                           ),
-                                          const SizedBox(width: 4),
+                                          SizedBox(width: 4),
                                           Text(
                                             '(120+ reviews)',
                                             style: TextStyle(
                                               fontSize: 13,
                                               fontWeight: FontWeight.w500,
-                                              color: Colors.grey.shade600,
+                                              color: Color(0xFFA0AAB5),
                                             ),
                                           ),
                                         ],
@@ -435,11 +461,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                             Row(
                                               mainAxisSize: MainAxisSize.min,
                                               children: [
+                                                const Text(
+                                                  'Rs. ',
+                                                  style: TextStyle(
+                                                    fontSize: 12.5,
+                                                    color: Color(0xFF8E959E),
+                                                    decoration:
+                                                        TextDecoration.lineThrough,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
                                                 Text(
-                                                  'Rs. ${selectedOriginalPrice.toStringAsFixed(0)}',
+                                                  selectedOriginalPrice.toStringAsFixed(0),
                                                   style: const TextStyle(
                                                     fontSize: 12.5,
-                                                    color: Color(0xFF888888),
+                                                    color: Color(0xFF8E959E),
                                                     decoration:
                                                         TextDecoration.lineThrough,
                                                     fontWeight: FontWeight.w500,
@@ -450,15 +486,20 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                                   padding: const EdgeInsets.symmetric(
                                                       horizontal: 6, vertical: 2),
                                                   decoration: BoxDecoration(
-                                                    color: AppColors.primaryPink
-                                                        .withValues(alpha: 0.12),
+                                                    color: const Color(0xFFFA4468)
+                                                        .withValues(alpha: 0.15),
                                                     borderRadius:
                                                         BorderRadius.circular(6),
+                                                    border: Border.all(
+                                                      color: const Color(0xFFFA4468)
+                                                          .withValues(alpha: 0.35),
+                                                      width: 0.8,
+                                                    ),
                                                   ),
                                                   child: Text(
                                                     '${discountPercent.toStringAsFixed(0)}% off',
                                                     style: const TextStyle(
-                                                      color: AppColors.primaryPink,
+                                                      color: Color(0xFFFA4468),
                                                       fontSize: 10.5,
                                                       fontWeight: FontWeight.w800,
                                                     ),
@@ -471,9 +512,9 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                           Text(
                                             'Rs. ${currentSelectedPrice.toStringAsFixed(2)}',
                                             style: const TextStyle(
-                                              fontSize: 20,
+                                              fontSize: 22,
                                               fontWeight: FontWeight.w900,
-                                              color: AppColors.primaryPink,
+                                              color: Color(0xFFFA4468),
                                             ),
                                           ),
                                         ],
@@ -482,7 +523,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                   ),
 
                                   const SizedBox(height: 16),
-                                  const Divider(color: Color(0xFFF1F3F5), height: 1),
+                                  const Divider(color: Color(0xFF2E313C), height: 1),
                                   const SizedBox(height: 16),
 
                                   // Description
@@ -491,7 +532,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w800,
-                                      color: AppColors.textDark,
+                                      color: Colors.white,
                                     ),
                                   ),
                                   const SizedBox(height: 6),
@@ -501,7 +542,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                         : 'Freshly prepared with premium quality ingredients, special herbs, and rich savory flavors. Perfect meal to satisfy your hunger.',
                                     style: const TextStyle(
                                       fontSize: 13.5,
-                                      color: Color(0xFF666666),
+                                      color: Color(0xFFA0AAB5),
                                       height: 1.5,
                                       fontWeight: FontWeight.w400,
                                     ),
@@ -519,7 +560,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                         style: TextStyle(
                                           fontSize: 16,
                                           fontWeight: FontWeight.w800,
-                                          color: AppColors.textDark,
+                                          color: Colors.white,
                                         ),
                                       ),
                                       Container(
@@ -528,16 +569,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                           vertical: 4,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: const Color(0xFFE9ECEF),
+                                          color: const Color(0xFF261622),
                                           borderRadius:
                                               BorderRadius.circular(12),
+                                          border: Border.all(
+                                            color: const Color(0xFFFA4468)
+                                                .withValues(alpha: 0.35),
+                                            width: 1,
+                                          ),
                                         ),
                                         child: const Text(
                                           'Required',
                                           style: TextStyle(
                                             fontSize: 11,
                                             fontWeight: FontWeight.w700,
-                                            color: Color(0xFF495057),
+                                            color: Color(0xFFFA4468),
                                           ),
                                         ),
                                       ),
@@ -561,42 +607,61 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                         vertical: 14,
                                       ),
                                       decoration: BoxDecoration(
+                                        gradient: _selectedVariation == 'Full'
+                                            ? const LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Color(0xFF2E1724),
+                                                  Color(0xFF3D1828),
+                                                ],
+                                              )
+                                            : null,
                                         color: _selectedVariation == 'Full'
-                                            ? AppColors.primaryPink
-                                                .withValues(alpha: 0.05)
-                                            : Colors.white,
+                                            ? null
+                                            : const Color(0xFF141518),
                                         borderRadius:
                                             BorderRadius.circular(16),
                                         border: Border.all(
                                           color: _selectedVariation == 'Full'
-                                              ? AppColors.primaryPink
-                                              : AppColors.inputBorder,
+                                              ? const Color(0xFFFA4468)
+                                              : const Color(0xFF2E313C),
                                           width: _selectedVariation == 'Full'
-                                              ? 1.8
+                                              ? 1.6
                                               : 1.0,
                                         ),
+                                        boxShadow: _selectedVariation == 'Full'
+                                            ? [
+                                                BoxShadow(
+                                                  color: const Color(0xFFFA4468)
+                                                      .withValues(alpha: 0.2),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ]
+                                            : null,
                                       ),
                                       child: Row(
                                         children: [
-                                          Expanded(
+                                          const Expanded(
                                             child: Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                const Text(
+                                                Text(
                                                   'Full Portion',
                                                   style: TextStyle(
                                                     fontSize: 15,
                                                     fontWeight: FontWeight.w700,
-                                                    color: AppColors.textDark,
+                                                    color: Colors.white,
                                                   ),
                                                 ),
-                                                const SizedBox(height: 2),
+                                                SizedBox(height: 2),
                                                 Text(
                                                   'Standard full serving',
                                                   style: TextStyle(
                                                     fontSize: 12,
-                                                    color: Colors.grey.shade600,
+                                                    color: Color(0xFFA0AAB5),
                                                   ),
                                                 ),
                                               ],
@@ -610,11 +675,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                                 Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
+                                                    const Text(
+                                                      'Rs. ',
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        color: Color(0xFF8E959E),
+                                                        decoration: TextDecoration
+                                                            .lineThrough,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
                                                     Text(
-                                                      'Rs. ${fullOriginalPrice.toStringAsFixed(0)}',
+                                                      fullOriginalPrice.toStringAsFixed(0),
                                                       style: const TextStyle(
                                                         fontSize: 11,
-                                                        color: Color(0xFF888888),
+                                                        color: Color(0xFF8E959E),
                                                         decoration: TextDecoration
                                                             .lineThrough,
                                                         fontWeight: FontWeight.w500,
@@ -625,17 +700,22 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                                       padding: const EdgeInsets.symmetric(
                                                           horizontal: 4, vertical: 1),
                                                       decoration: BoxDecoration(
-                                                        color: AppColors.primaryPink
-                                                            .withValues(alpha: 0.12),
+                                                        color: const Color(0xFFFA4468)
+                                                            .withValues(alpha: 0.15),
                                                         borderRadius:
                                                             BorderRadius.circular(4),
+                                                        border: Border.all(
+                                                          color: const Color(0xFFFA4468)
+                                                              .withValues(alpha: 0.35),
+                                                          width: 0.8,
+                                                        ),
                                                       ),
                                                       child: Text(
                                                         '${discountPercent.toStringAsFixed(0)}% off',
                                                         style: const TextStyle(
                                                           fontSize: 9,
                                                           fontWeight: FontWeight.w800,
-                                                          color: AppColors.primaryPink,
+                                                          color: Color(0xFFFA4468),
                                                         ),
                                                       ),
                                                     ),
@@ -648,7 +728,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                                 style: const TextStyle(
                                                   fontSize: 14.5,
                                                   fontWeight: FontWeight.w800,
-                                                  color: AppColors.primaryPink,
+                                                  color: Color(0xFFFA4468),
                                                 ),
                                               ),
                                             ],
@@ -662,8 +742,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                               border: Border.all(
                                                 color: _selectedVariation ==
                                                         'Full'
-                                                    ? AppColors.primaryPink
-                                                    : const Color(0xFFADB5BD),
+                                                    ? const Color(0xFFFA4468)
+                                                    : const Color(0xFF5E6573),
                                                 width: 2,
                                               ),
                                             ),
@@ -675,8 +755,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                                       decoration:
                                                           const BoxDecoration(
                                                         shape: BoxShape.circle,
-                                                        color: AppColors
-                                                            .primaryPink,
+                                                        color: Color(0xFFFA4468),
                                                       ),
                                                     ),
                                                   )
@@ -705,42 +784,61 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                         vertical: 14,
                                       ),
                                       decoration: BoxDecoration(
+                                        gradient: _selectedVariation == 'Half'
+                                            ? const LinearGradient(
+                                                begin: Alignment.topLeft,
+                                                end: Alignment.bottomRight,
+                                                colors: [
+                                                  Color(0xFF2E1724),
+                                                  Color(0xFF3D1828),
+                                                ],
+                                              )
+                                            : null,
                                         color: _selectedVariation == 'Half'
-                                            ? AppColors.primaryPink
-                                                .withValues(alpha: 0.05)
-                                            : Colors.white,
+                                            ? null
+                                            : const Color(0xFF141518),
                                         borderRadius:
                                             BorderRadius.circular(16),
                                         border: Border.all(
                                           color: _selectedVariation == 'Half'
-                                              ? AppColors.primaryPink
-                                              : AppColors.inputBorder,
+                                              ? const Color(0xFFFA4468)
+                                              : const Color(0xFF2E313C),
                                           width: _selectedVariation == 'Half'
-                                              ? 1.8
+                                              ? 1.6
                                               : 1.0,
                                         ),
+                                        boxShadow: _selectedVariation == 'Half'
+                                            ? [
+                                                BoxShadow(
+                                                  color: const Color(0xFFFA4468)
+                                                      .withValues(alpha: 0.2),
+                                                  blurRadius: 10,
+                                                  offset: const Offset(0, 2),
+                                                ),
+                                              ]
+                                            : null,
                                       ),
                                       child: Row(
                                         children: [
-                                          Expanded(
+                                          const Expanded(
                                             child: Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                const Text(
+                                                Text(
                                                   'Half Portion',
                                                   style: TextStyle(
                                                     fontSize: 15,
                                                     fontWeight: FontWeight.w700,
-                                                    color: AppColors.textDark,
+                                                    color: Colors.white,
                                                   ),
                                                 ),
-                                                const SizedBox(height: 2),
+                                                SizedBox(height: 2),
                                                 Text(
                                                   'Individual smaller serving',
                                                   style: TextStyle(
                                                     fontSize: 12,
-                                                    color: Colors.grey.shade600,
+                                                    color: Color(0xFFA0AAB5),
                                                   ),
                                                 ),
                                               ],
@@ -754,11 +852,21 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                                 Row(
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
+                                                    const Text(
+                                                      'Rs. ',
+                                                      style: TextStyle(
+                                                        fontSize: 11,
+                                                        color: Color(0xFF8E959E),
+                                                        decoration: TextDecoration
+                                                            .lineThrough,
+                                                        fontWeight: FontWeight.w500,
+                                                      ),
+                                                    ),
                                                     Text(
-                                                      'Rs. ${halfOriginalPrice.toStringAsFixed(0)}',
+                                                      halfOriginalPrice.toStringAsFixed(0),
                                                       style: const TextStyle(
                                                         fontSize: 11,
-                                                        color: Color(0xFF888888),
+                                                        color: Color(0xFF8E959E),
                                                         decoration: TextDecoration
                                                             .lineThrough,
                                                         fontWeight: FontWeight.w500,
@@ -769,17 +877,22 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                                       padding: const EdgeInsets.symmetric(
                                                           horizontal: 4, vertical: 1),
                                                       decoration: BoxDecoration(
-                                                        color: AppColors.primaryPink
-                                                            .withValues(alpha: 0.12),
+                                                        color: const Color(0xFFFA4468)
+                                                            .withValues(alpha: 0.15),
                                                         borderRadius:
                                                             BorderRadius.circular(4),
+                                                        border: Border.all(
+                                                          color: const Color(0xFFFA4468)
+                                                          .withValues(alpha: 0.35),
+                                                          width: 0.8,
+                                                        ),
                                                       ),
                                                       child: Text(
                                                         '${discountPercent.toStringAsFixed(0)}% off',
                                                         style: const TextStyle(
                                                           fontSize: 9,
                                                           fontWeight: FontWeight.w800,
-                                                          color: AppColors.primaryPink,
+                                                          color: Color(0xFFFA4468),
                                                         ),
                                                       ),
                                                     ),
@@ -792,7 +905,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                                 style: const TextStyle(
                                                   fontSize: 14.5,
                                                   fontWeight: FontWeight.w800,
-                                                  color: AppColors.primaryPink,
+                                                  color: Color(0xFFFA4468),
                                                 ),
                                               ),
                                             ],
@@ -806,8 +919,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                               border: Border.all(
                                                 color: _selectedVariation ==
                                                         'Half'
-                                                    ? AppColors.primaryPink
-                                                    : const Color(0xFFADB5BD),
+                                                    ? const Color(0xFFFA4468)
+                                                    : const Color(0xFF5E6573),
                                                 width: 2,
                                               ),
                                             ),
@@ -819,8 +932,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                                       decoration:
                                                           const BoxDecoration(
                                                         shape: BoxShape.circle,
-                                                        color: AppColors
-                                                            .primaryPink,
+                                                        color: Color(0xFFFA4468),
                                                       ),
                                                     ),
                                                   )
@@ -865,12 +977,19 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.4),
+                                color: const Color(0xFF1E1F24).withValues(alpha: 0.85),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3),
-                                  width: 1,
+                                  color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                                  width: 1.2,
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.4),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: const Center(
                                 child: Icon(
@@ -897,12 +1016,19 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                               width: 44,
                               height: 44,
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.4),
+                                color: const Color(0xFF1E1F24).withValues(alpha: 0.85),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.3),
-                                  width: 1,
+                                  color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                                  width: 1.2,
                                 ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.4),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
                               child: Center(
                                 child: Icon(
@@ -910,7 +1036,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                       ? Icons.favorite_rounded
                                       : Icons.favorite_border_rounded,
                                   color: _isFavorite
-                                      ? const Color(0xFFFF3366)
+                                      ? const Color(0xFFFA4468)
                                       : Colors.white,
                                   size: 22,
                                 ),
@@ -932,15 +1058,28 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF1A1B20),
+                        Color(0xFF261822),
+                      ],
+                    ),
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(24),
                     ),
+                    border: Border(
+                      top: BorderSide(
+                        color: const Color(0xFFFA4468).withValues(alpha: 0.25),
+                        width: 1.2,
+                      ),
+                    ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.08),
-                        blurRadius: 16,
-                        offset: const Offset(0, -4),
+                        color: Colors.black.withValues(alpha: 0.6),
+                        blurRadius: 20,
+                        offset: const Offset(0, -6),
                       ),
                     ],
                   ),
@@ -952,11 +1091,11 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                         Container(
                           height: 48,
                           decoration: BoxDecoration(
-                            color: AppColors.background,
+                            color: const Color(0xFF141518),
                             borderRadius: BorderRadius.circular(24),
                             border: Border.all(
-                              color: const Color(0xFFE2E6EA),
-                              width: 1,
+                              color: const Color(0xFF2E313C),
+                              width: 1.2,
                             ),
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -968,8 +1107,8 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                   Icons.remove,
                                   size: 16,
                                   color: _quantity > 1
-                                      ? AppColors.textDark
-                                      : Colors.grey.shade400,
+                                      ? Colors.white
+                                      : const Color(0xFF5E6573),
                                 ),
                                 onPressed: _quantity > 1
                                     ? () => setState(() => _quantity--)
@@ -988,7 +1127,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                   style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w800,
-                                    color: AppColors.textDark,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ),
@@ -996,7 +1135,7 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
                                 icon: const Icon(
                                   Icons.add,
                                   size: 16,
-                                  color: AppColors.textDark,
+                                  color: Color(0xFFFA4468),
                                 ),
                                 onPressed: () => setState(() => _quantity++),
                                 constraints: const BoxConstraints(
@@ -1011,13 +1150,27 @@ class _ItemDetailScreenState extends State<ItemDetailScreen> {
 
                         const SizedBox(width: 10),
 
-                        // Add to cart Button
+                        // Add to cart Button with Pink Gradient
                         Expanded(
-                          child: SizedBox(
+                          child: Container(
                             height: 48,
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFA4468), Color(0xFFFF6584)],
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                                  blurRadius: 12,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primaryPink,
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
                                 elevation: 0,
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 12),

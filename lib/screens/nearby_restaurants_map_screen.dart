@@ -8,6 +8,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import '../constants/app_colors.dart';
 import '../services/route_service.dart';
+import '../widgets/app_network_image.dart';
 import 'restaurant_detail_screen.dart';
 
 class NearbyRestaurantsMapScreen extends StatefulWidget {
@@ -78,6 +79,57 @@ class _NearbyRestaurantsMapScreenState
   List<LatLng> _routePoints = [];
   double _routeDistanceKm = 0.0;
   int _routeDurationMins = 0;
+
+  static String getRestaurantFallbackImage(String restaurantName, [String docId = '']) {
+    final nameLower = restaurantName.toLowerCase().trim();
+    if (nameLower.contains('coffee') || nameLower.contains('cafe') || nameLower.contains('tea')) {
+      return 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=500&auto=format&fit=crop&q=80';
+    } else if (nameLower.contains('burger') || nameLower.contains('fast') || nameLower.contains('kfc') || nameLower.contains('crispy')) {
+      return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&auto=format&fit=crop&q=80';
+    } else if (nameLower.contains('pizza') || nameLower.contains('piza') || nameLower.contains('italian')) {
+      return 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&auto=format&fit=crop&q=80';
+    } else if (nameLower.contains('bbq') || nameLower.contains('meat') || nameLower.contains('grill') || nameLower.contains('steak') || nameLower.contains('tikka')) {
+      return 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=500&auto=format&fit=crop&q=80';
+    } else if (nameLower.contains('biryani') || nameLower.contains('rice') || nameLower.contains('karahi') || nameLower.contains('desi') || nameLower.contains('spice')) {
+      return 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=500&auto=format&fit=crop&q=80';
+    } else if (nameLower.contains('cake') || nameLower.contains('sweet') || nameLower.contains('baker') || nameLower.contains('dessert')) {
+      return 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=500&auto=format&fit=crop&q=80';
+    }
+
+    final curated = [
+      'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1552566626-52f8b828add9?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1544025162-d76694265947?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1550547660-d9450f859349?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1578474846511-04ba529f0b88?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1600565193348-f74bd3c7ccdf?w=500&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1559339352-11d035aa65de?w=500&auto=format&fit=crop&q=80',
+    ];
+    final hash = (restaurantName + docId).hashCode.abs();
+    return curated[hash % curated.length];
+  }
+
+  static String _getEffectiveRestaurantImageUrl(
+    String url,
+    String restaurantName, [
+    String docId = '',
+  ]) {
+    final String finalUrl = url.trim();
+    if (finalUrl.isNotEmpty) {
+      if (finalUrl.startsWith('http') ||
+          finalUrl.startsWith('data:image') ||
+          finalUrl.length > 200) {
+        return finalUrl;
+      }
+      try {
+        if (File(finalUrl).existsSync()) {
+          return finalUrl;
+        }
+      } catch (_) {}
+    }
+    return getRestaurantFallbackImage(restaurantName, docId);
+  }
 
   @override
   void initState() {
@@ -192,7 +244,7 @@ class _NearbyRestaurantsMapScreenState
     FirebaseFirestore.instance
         .collection('restaurants')
         .snapshots()
-        .listen((snapshot) {
+        .listen((snapshot) async {
       if (!mounted) return;
 
       final userCenter = _userLocation ?? const LatLng(31.5204, 74.3587);
@@ -203,8 +255,41 @@ class _NearbyRestaurantsMapScreenState
         final data = doc.data();
 
         final rId = (data['restaurant_id'] ?? data['unique_id'] ?? doc.id).toString();
-        final rName = (data['restaurant_name'] ?? data['name'] ?? 'HeartTale Restaurant').toString();
-        final rLogo = (data['logo_image'] ?? data['logo'] ?? data['photoUrl'] ?? '').toString();
+        final rName = (data['restaurant_name'] ?? data['name'] ?? 'Restaurant').toString();
+        String rLogo = (
+          data['logo_image'] ??
+          data['logo'] ??
+          data['photoUrl'] ??
+          data['restaurant_logo'] ??
+          data['image_url'] ??
+          data['profile_pic'] ??
+          data['profile_picture'] ??
+          data['image'] ??
+          data['pic'] ??
+          ''
+        ).toString().trim();
+
+        // If logo is empty in restaurants doc, check users collection doc
+        if (rLogo.isEmpty) {
+          try {
+            final userDocId = (data['user_id'] ?? doc.id).toString();
+            final userDoc = await FirebaseFirestore.instance.collection('users').doc(userDocId).get();
+            if (userDoc.exists) {
+              final uData = userDoc.data() ?? {};
+              rLogo = (
+                uData['logo_image'] ??
+                uData['photoUrl'] ??
+                uData['logo'] ??
+                uData['profile_pic'] ??
+                uData['profile_picture'] ??
+                uData['image'] ??
+                ''
+              ).toString().trim();
+            }
+          } catch (_) {}
+        }
+
+        final effectiveLogo = _getEffectiveRestaurantImageUrl(rLogo, rName, doc.id);
         final rAddress = (data['location'] ?? data['address'] ?? 'Nearby Area').toString();
         final rDesc = (data['user_description'] ?? data['description'] ?? 'Delicious food and specialties').toString();
         final rPhone = (data['phone'] ?? '').toString();
@@ -218,10 +303,9 @@ class _NearbyRestaurantsMapScreenState
         double? lng = (data['longitude'] as num?)?.toDouble();
 
         if (lat == null || lng == null || (lat == 0 && lng == 0)) {
-          // Generate deterministic realistic nearby radius based on document hash / index
           final hash = doc.id.hashCode.abs();
           final angle = (hash % 360) * (math.pi / 180.0) + (i * 0.85);
-          final radiusKm = 0.5 + ((hash % 30) / 10.0); // 0.5km to 3.5km away
+          final radiusKm = 0.5 + ((hash % 30) / 10.0);
           final deltaLat = (radiusKm / 111.0) * math.cos(angle);
           final deltaLng = (radiusKm / (111.0 * math.cos(userCenter.latitude * (math.pi / 180.0)))) *
               math.sin(angle);
@@ -244,7 +328,7 @@ class _NearbyRestaurantsMapScreenState
           docId: doc.id,
           restaurantId: rId,
           name: rName,
-          logoImage: rLogo,
+          logoImage: effectiveLogo,
           address: rAddress,
           description: rDesc,
           phone: rPhone,
@@ -256,9 +340,9 @@ class _NearbyRestaurantsMapScreenState
         ));
       }
 
-      // Sort by distance
       list.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
 
+      if (!mounted) return;
       setState(() {
         _allRestaurants = list;
         _applyFilters();
@@ -344,57 +428,6 @@ class _NearbyRestaurantsMapScreenState
     }
   }
 
-  Widget _buildImage(String url, {required double width, required double height}) {
-    if (url.trim().isEmpty) {
-      return _buildFallbackImage(width, height);
-    }
-
-    if (!url.startsWith('http')) {
-      final file = File(url);
-      if (file.existsSync()) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(14),
-          child: Image.file(
-            file,
-            width: width,
-            height: height,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildFallbackImage(width, height),
-          ),
-        );
-      }
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Image.network(
-        url,
-        width: width,
-        height: height,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildFallbackImage(width, height),
-      ),
-    );
-  }
-
-  Widget _buildFallbackImage(double width, double height) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF0F3),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.restaurant_rounded,
-          color: AppColors.primaryPink,
-          size: 28,
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final userPt = _userLocation ?? const LatLng(31.5204, 74.3587);
@@ -407,7 +440,7 @@ class _NearbyRestaurantsMapScreenState
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           // 1. Full Screen Interactive Map
@@ -516,19 +549,19 @@ class _NearbyRestaurantsMapScreenState
                                   horizontal: 8, vertical: 3.5),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? const Color(0xFF1E242B)
-                                    : Colors.white,
+                                    ? const Color(0xFF1E1F24)
+                                    : const Color(0xFF1A1B20).withValues(alpha: 0.92),
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppColors.primaryPink
-                                      : const Color(0xFFDCDFE3),
+                                      : const Color(0xFF2E313C),
                                   width: isSelected ? 1.5 : 1.0,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
                                     color: Colors.black.withValues(
-                                        alpha: isSelected ? 0.25 : 0.12),
+                                        alpha: isSelected ? 0.35 : 0.2),
                                     blurRadius: isSelected ? 8 : 5,
                                     offset: const Offset(0, 2),
                                   ),
@@ -543,7 +576,7 @@ class _NearbyRestaurantsMapScreenState
                                       style: TextStyle(
                                         color: isSelected
                                             ? Colors.white
-                                            : AppColors.textDark,
+                                            : Colors.white70,
                                         fontSize: 11.5,
                                         fontWeight: FontWeight.w800,
                                         letterSpacing: -0.2,
@@ -563,7 +596,7 @@ class _NearbyRestaurantsMapScreenState
                                     style: TextStyle(
                                       color: isSelected
                                           ? const Color(0xFFFFD56B)
-                                          : AppColors.textDark,
+                                          : Colors.white70,
                                       fontSize: 10,
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -580,7 +613,7 @@ class _NearbyRestaurantsMapScreenState
                               decoration: BoxDecoration(
                                 color: isSelected
                                     ? AppColors.primaryPink
-                                    : Colors.white,
+                                    : const Color(0xFF1E1F24),
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: isSelected
@@ -592,8 +625,8 @@ class _NearbyRestaurantsMapScreenState
                                   BoxShadow(
                                     color: isSelected
                                         ? AppColors.primaryPink
-                                            .withValues(alpha: 0.4)
-                                        : Colors.black.withValues(alpha: 0.18),
+                                            .withValues(alpha: 0.45)
+                                        : Colors.black.withValues(alpha: 0.25),
                                     blurRadius: 6,
                                     offset: const Offset(0, 2),
                                   ),
@@ -631,9 +664,7 @@ class _NearbyRestaurantsMapScreenState
                   Row(
                     children: [
                       Material(
-                        color: Colors.white,
-                        elevation: 3,
-                        borderRadius: BorderRadius.circular(14),
+                        color: Colors.transparent,
                         child: InkWell(
                           onTap: () => Navigator.of(context).pop(),
                           borderRadius: BorderRadius.circular(14),
@@ -641,11 +672,23 @@ class _NearbyRestaurantsMapScreenState
                             width: 44,
                             height: 44,
                             decoration: BoxDecoration(
+                              color: const Color(0xFF1E1F24),
                               borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: const Color(0xFF2E313C),
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.15),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: const Icon(
                               Icons.arrow_back_ios_new_rounded,
-                              color: AppColors.textDark,
+                              color: AppColors.primaryPink,
                               size: 18,
                             ),
                           ),
@@ -656,11 +699,15 @@ class _NearbyRestaurantsMapScreenState
                         child: Container(
                           height: 44,
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: const Color(0xFF1E1F24),
                             borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(0xFF2E313C),
+                              width: 1,
+                            ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.08),
+                                color: Colors.black.withValues(alpha: 0.15),
                                 blurRadius: 10,
                                 offset: const Offset(0, 2),
                               ),
@@ -672,11 +719,16 @@ class _NearbyRestaurantsMapScreenState
                               _searchQuery = val;
                               _applyFilters();
                             },
+                            style: const TextStyle(
+                              fontSize: 13.5,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
                             decoration: InputDecoration(
                               hintText: 'Search nearby restaurants...',
                               hintStyle: const TextStyle(
-                                fontSize: 13.5,
-                                color: AppColors.textMuted,
+                                fontSize: 13,
+                                color: Color(0xFF8E92A0),
                               ),
                               prefixIcon: const Icon(
                                 Icons.search_rounded,
@@ -685,7 +737,7 @@ class _NearbyRestaurantsMapScreenState
                               ),
                               suffixIcon: _searchQuery.isNotEmpty
                                   ? IconButton(
-                                      icon: const Icon(Icons.clear, size: 18),
+                                      icon: const Icon(Icons.clear, size: 18, color: Colors.white60),
                                       onPressed: () {
                                         _searchController.clear();
                                         _searchQuery = '';
@@ -713,11 +765,15 @@ class _NearbyRestaurantsMapScreenState
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: const Color(0xFF1E1F24),
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFF2E313C),
+                            width: 1,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.08),
+                              color: Colors.black.withValues(alpha: 0.12),
                               blurRadius: 6,
                             ),
                           ],
@@ -733,6 +789,12 @@ class _NearbyRestaurantsMapScreenState
                                     ? Colors.orange
                                     : AppColors.editGreen,
                                 shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (_isLoadingLocation ? Colors.orange : AppColors.editGreen).withValues(alpha: 0.6),
+                                    blurRadius: 4,
+                                  ),
+                                ],
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -741,7 +803,7 @@ class _NearbyRestaurantsMapScreenState
                               style: const TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.textDark,
+                                color: Colors.white,
                               ),
                             ),
                           ],
@@ -753,6 +815,7 @@ class _NearbyRestaurantsMapScreenState
                       Expanded(
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
                           child: Row(
                             children: [
                               _buildFilterChip('All', 'all'),
@@ -779,12 +842,12 @@ class _NearbyRestaurantsMapScreenState
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.95),
+                  color: const Color(0xFF1E1F24).withValues(alpha: 0.94),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFE5E7EB), width: 1),
+                  border: Border.all(color: const Color(0xFF2E313C), width: 1),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.08),
+                      color: Colors.black.withValues(alpha: 0.15),
                       blurRadius: 6,
                     ),
                   ],
@@ -801,7 +864,7 @@ class _NearbyRestaurantsMapScreenState
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -815,9 +878,7 @@ class _NearbyRestaurantsMapScreenState
             child: Column(
               children: [
                 Material(
-                  color: Colors.white,
-                  elevation: 4,
-                  shape: const CircleBorder(),
+                  color: Colors.transparent,
                   child: InkWell(
                     onTap: () {
                       if (_userLocation != null) {
@@ -826,10 +887,21 @@ class _NearbyRestaurantsMapScreenState
                         _initLiveLocation();
                       }
                     },
-                    customBorder: const CircleBorder(),
-                    child: const Padding(
-                      padding: EdgeInsets.all(12.0),
-                      child: Icon(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      padding: const EdgeInsets.all(12.0),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1E1F24).withValues(alpha: 0.94),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: const Color(0xFF2E313C)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.18),
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
                         Icons.my_location_rounded,
                         color: AppColors.primaryPink,
                         size: 22,
@@ -840,17 +912,26 @@ class _NearbyRestaurantsMapScreenState
                 const SizedBox(height: 10),
                 if (activeRestaurant != null)
                   Material(
-                    color: Colors.white,
-                    elevation: 4,
-                    shape: const CircleBorder(),
+                    color: Colors.transparent,
                     child: InkWell(
                       onTap: () {
                         _mapController.move(activeRestaurant!.latLng, 15.5);
                       },
-                      customBorder: const CircleBorder(),
-                      child: const Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: Icon(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Container(
+                        padding: const EdgeInsets.all(12.0),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E1F24).withValues(alpha: 0.94),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFF2E313C)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.18),
+                              blurRadius: 6,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
                           Icons.restaurant_menu_rounded,
                           color: AppColors.editGreen,
                           size: 22,
@@ -878,12 +959,16 @@ class _NearbyRestaurantsMapScreenState
                     padding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2C3238).withValues(alpha: 0.88),
+                      color: const Color(0xFF1A1B20).withValues(alpha: 0.94),
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: AppColors.primaryPink.withValues(alpha: 0.28),
+                        width: 1,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 6,
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 8,
                         ),
                       ],
                     ),
@@ -917,13 +1002,14 @@ class _NearbyRestaurantsMapScreenState
                           child: Container(
                             padding: const EdgeInsets.all(14),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: const Color(0xFF1E1F24),
                               borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: const Color(0xFF2E313C)),
                             ),
                             child: const Text(
                               'No restaurants found in this filter',
                               style: TextStyle(
-                                color: AppColors.textDark,
+                                color: Colors.white70,
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
@@ -941,23 +1027,37 @@ class _NearbyRestaurantsMapScreenState
                                 rest.restaurantId == _selectedRestaurantId;
 
                             return Container(
-                              width: 280,
+                              width: 286,
                               margin: const EdgeInsets.only(right: 12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                gradient: const LinearGradient(
+                                  colors: [
+                                    Color(0xFF1A1B20), // Deep obsidian charcoal
+                                    Color(0xFF261822), // Dark plum/rose undertone
+                                    Color(0xFF381420), // Subtle pinkish-dark glow
+                                  ],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelected
                                       ? AppColors.primaryPink
-                                      : const Color(0xFFE5E7EB),
-                                  width: isSelected ? 2.0 : 1.0,
+                                      : AppColors.primaryPink.withValues(alpha: 0.28),
+                                  width: isSelected ? 2.0 : 1.1,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
+                                    color: Colors.black.withValues(alpha: 0.22),
                                     blurRadius: 14,
                                     offset: const Offset(0, 4),
                                   ),
+                                  if (isSelected)
+                                    BoxShadow(
+                                      color: AppColors.primaryPink.withValues(alpha: 0.25),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 2),
+                                    ),
                                 ],
                               ),
                               child: Material(
@@ -971,10 +1071,22 @@ class _NearbyRestaurantsMapScreenState
                                     child: Row(
                                       children: [
                                         // Restaurant Image
-                                        _buildImage(
-                                          rest.logoImage,
-                                          width: 72,
-                                          height: 72,
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(14),
+                                            border: Border.all(
+                                              color: AppColors.primaryPink.withValues(alpha: 0.25),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: AppNetworkImage(
+                                            imageUrl: rest.logoImage,
+                                            width: 72,
+                                            height: 72,
+                                            borderRadius: 14,
+                                            fit: BoxFit.cover,
+                                            fallbackIcon: Icons.restaurant_rounded,
+                                          ),
                                         ),
                                         const SizedBox(width: 12),
 
@@ -991,7 +1103,7 @@ class _NearbyRestaurantsMapScreenState
                                                 style: const TextStyle(
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.w800,
-                                                  color: AppColors.textDark,
+                                                  color: Colors.white,
                                                 ),
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
@@ -1010,8 +1122,7 @@ class _NearbyRestaurantsMapScreenState
                                                       '${rest.distanceKm.toStringAsFixed(1)} km • ~${rest.estimatedTimeMins} mins',
                                                       style: const TextStyle(
                                                         fontSize: 11.5,
-                                                        color: AppColors
-                                                            .textMuted,
+                                                        color: Colors.white70,
                                                         fontWeight:
                                                             FontWeight.w600,
                                                       ),
@@ -1047,8 +1158,7 @@ class _NearbyRestaurantsMapScreenState
                                                           fontSize: 12.5,
                                                           fontWeight:
                                                               FontWeight.w800,
-                                                          color:
-                                                              AppColors.textDark,
+                                                          color: Colors.white,
                                                         ),
                                                       ),
                                                     ],
@@ -1086,15 +1196,28 @@ class _NearbyRestaurantsMapScreenState
                                                       padding: const EdgeInsets
                                                           .symmetric(
                                                         horizontal: 10,
-                                                        vertical: 4,
+                                                        vertical: 4.5,
                                                       ),
                                                       decoration:
                                                           BoxDecoration(
-                                                        color: AppColors
-                                                            .primaryPink,
+                                                        gradient: const LinearGradient(
+                                                          colors: [
+                                                            Color(0xFFFA4468),
+                                                            Color(0xFFFF6584),
+                                                          ],
+                                                          begin: Alignment.topLeft,
+                                                          end: Alignment.bottomRight,
+                                                        ),
                                                         borderRadius:
                                                             BorderRadius
                                                                 .circular(10),
+                                                        boxShadow: [
+                                                          BoxShadow(
+                                                            color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                                                            blurRadius: 4,
+                                                            offset: const Offset(0, 1),
+                                                          ),
+                                                        ],
                                                       ),
                                                       child: const Row(
                                                         mainAxisSize:
@@ -1157,25 +1280,45 @@ class _NearbyRestaurantsMapScreenState
           });
         },
         borderRadius: BorderRadius.circular(20),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primaryPink : Colors.white,
+            color: isSelected ? null : const Color(0xFF1E1F24),
+            gradient: isSelected
+                ? const LinearGradient(
+                    colors: [Color(0xFFFA4468), Color(0xFFFF6584)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
             borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            border: Border.all(
+              color: isSelected ? const Color(0xFFFA4468) : const Color(0xFF2E313C),
+              width: 1,
+            ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
           ),
           child: Text(
             label,
             style: TextStyle(
               fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: isSelected ? Colors.white : AppColors.textDark,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+              color: isSelected ? Colors.white : Colors.white70,
             ),
           ),
         ),

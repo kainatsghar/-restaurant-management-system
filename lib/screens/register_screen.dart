@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
 import 'login_screen.dart';
 import 'restaurant_register_screen.dart';
@@ -79,10 +78,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
+            colorScheme: const ColorScheme.dark(
               primary: Color(0xFFFA4468),
               onPrimary: Colors.white,
-              onSurface: AppColors.textDark,
+              surface: Color(0xFF1E1F24),
+              onSurface: Colors.white,
+            ),
+            dialogTheme: const DialogThemeData(
+              backgroundColor: Color(0xFF1A1B20),
             ),
           ),
           child: child!,
@@ -103,8 +106,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void _showCountryPicker() {
     showModalBottomSheet(
       context: context,
+      backgroundColor: const Color(0xFF1A1B20),
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
         return SafeArea(
@@ -116,7 +120,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 height: 4,
                 margin: const EdgeInsets.only(top: 12, bottom: 8),
                 decoration: BoxDecoration(
-                  color: Colors.grey[300],
+                  color: const Color(0xFF383C48),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -127,11 +131,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    color: AppColors.textDark,
+                    color: Colors.white,
                   ),
                 ),
               ),
-              const Divider(height: 1),
+              const Divider(height: 1, color: Color(0xFF2E313C)),
               Expanded(
                 child: ListView.builder(
                   shrinkWrap: true,
@@ -143,7 +147,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         country['flag']!,
                         style: const TextStyle(fontSize: 24),
                       ),
-                      title: Text('${country['name']} (${country['code']})'),
+                      title: Text(
+                        '${country['name']} (${country['code']})',
+                        style: const TextStyle(color: Colors.white, fontSize: 14),
+                      ),
                       onTap: () {
                         setState(() {
                           _selectedCountryCode = country['code']!;
@@ -248,17 +255,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFF0F1015),
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          // Matching vertical gradient from coral-pink to fresh lime green
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Color(0xFFFA4468),
-              Color(0xFF86BF34),
+              Color(0xFF0F1015),
+              Color(0xFF191319),
+              Color(0xFF261822),
             ],
           ),
         ),
@@ -266,7 +274,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top Back Button matching mockup
+              // Top Back Button
               Padding(
                 padding: const EdgeInsets.only(left: 16, top: 8, bottom: 4),
                 child: IconButton(
@@ -300,13 +308,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         vertical: 28,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF1A1B20),
+                            Color(0xFF261822),
+                            Color(0xFF381420),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: const Color(0xFFFA4468).withValues(alpha: 0.3),
+                          width: 1.2,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.08),
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.12),
                             blurRadius: 28,
-                            offset: const Offset(0, 12),
+                            offset: const Offset(0, 10),
+                          ),
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.5),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
                         ],
                       ),
@@ -315,13 +340,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Title: Sign Up in bold pink
+                            // App Icon / Logo Accent
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFA4468).withValues(alpha: 0.15),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.person_add_alt_1_rounded,
+                                color: Color(0xFFFA4468),
+                                size: 28,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            // Title: Sign Up
                             const Text(
                               'Sign Up',
                               style: TextStyle(
                                 fontSize: 28,
                                 fontWeight: FontWeight.w700,
-                                color: Color(0xFFFA4468),
+                                color: Colors.white,
                                 letterSpacing: -0.5,
                               ),
                             ),
@@ -332,7 +376,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Color(0xFF8E959E),
+                                color: Color(0xFFA0AAB5),
                                 fontWeight: FontWeight.w400,
                               ),
                             ),
@@ -341,7 +385,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             // Field 1: First Name
                             _buildInputField(
                               controller: _firstNameController,
-                              hintText: 'Shoban',
+                              hintText: 'First Name (e.g. Shoban)',
+                              prefixIcon: Icons.person_outline_rounded,
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
                                   return 'First name is required';
@@ -354,7 +399,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             // Field 2: Last Name
                             _buildInputField(
                               controller: _lastNameController,
-                              hintText: 'Haider',
+                              hintText: 'Last Name (e.g. Haider)',
+                              prefixIcon: Icons.badge_outlined,
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
                                   return 'Last name is required';
@@ -369,6 +415,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               controller: _emailController,
                               hintText: 'shoban@login.com',
                               keyboardType: TextInputType.emailAddress,
+                              prefixIcon: Icons.email_outlined,
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
                                   return 'Email is required';
@@ -389,11 +436,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               onTap: _pickDateOfBirth,
                               style: const TextStyle(
                                 fontSize: 14,
-                                color: Color(0xFF2C3238),
+                                color: Colors.white,
                                 fontWeight: FontWeight.w500,
                               ),
                               decoration: _inputDecoration(
-                                hintText: '18/03/2024',
+                                hintText: 'Date of Birth (DD/MM/YYYY)',
+                                prefixIcon: Icons.cake_outlined,
                                 suffixIcon: IconButton(
                                   icon: const Icon(
                                     Icons.calendar_month_outlined,
@@ -418,12 +466,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               keyboardType: TextInputType.phone,
                               style: const TextStyle(
                                 fontSize: 14,
-                                color: Color(0xFF2C3238),
+                                color: Colors.white,
                                 fontWeight: FontWeight.w500,
                               ),
                               decoration: _inputDecoration(
                                 hintText: '(454) 726-0592',
-                                prefixIcon: InkWell(
+                                prefixWidget: InkWell(
                                   onTap: _showCountryPicker,
                                   borderRadius: const BorderRadius.horizontal(
                                     left: Radius.circular(12),
@@ -443,13 +491,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                         const Icon(
                                           Icons.keyboard_arrow_down_rounded,
                                           size: 16,
-                                          color: Color(0xFF8E959E),
+                                          color: Color(0xFFA0AAB5),
                                         ),
                                         const SizedBox(width: 8),
                                         Container(
                                           width: 1,
                                           height: 20,
-                                          color: const Color(0xFFE0E0E0),
+                                          color: const Color(0xFF2E313C),
                                         ),
                                         const SizedBox(width: 8),
                                       ],
@@ -472,11 +520,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               obscureText: !_isPasswordVisible,
                               style: const TextStyle(
                                 fontSize: 14,
-                                color: Color(0xFF2C3238),
+                                color: Colors.white,
                                 fontWeight: FontWeight.w500,
                               ),
                               decoration: _inputDecoration(
                                 hintText: '••••••••',
+                                prefixIcon: Icons.lock_outline_rounded,
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _isPasswordVisible
@@ -504,16 +553,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                             const SizedBox(height: 24),
 
-                            // Register Button
-                            SizedBox(
+                            // Register Button with Pink Gradient
+                            Container(
                               width: double.infinity,
                               height: 48,
+                              decoration: BoxDecoration(
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFFA4468), Color(0xFFFF6584)],
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
                               child: ElevatedButton(
                                 onPressed: _isLoading ? null : _handleRegister,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFFA4468),
+                                  backgroundColor: Colors.transparent,
+                                  shadowColor: Colors.transparent,
                                   foregroundColor: Colors.white,
-                                  elevation: 0,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -531,7 +593,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                       'Register',
                                       style: TextStyle(
                                         fontSize: 15,
-                                        fontWeight: FontWeight.w600,
+                                        fontWeight: FontWeight.w700,
                                         letterSpacing: 0.3,
                                       ),
                                     ),
@@ -547,7 +609,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   'Already have an account? ',
                                   style: TextStyle(
                                     fontSize: 13,
-                                    color: Color(0xFF8E959E),
+                                    color: Color(0xFFA0AAB5),
                                   ),
                                 ),
                                 GestureDetector(
@@ -602,11 +664,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                   ),
                                 ),
                                 style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
-                                    color: Color(0xFFFFD4DC),
-                                    width: 1.5,
+                                  side: BorderSide(
+                                    color: const Color(0xFFFA4468).withValues(alpha: 0.4),
+                                    width: 1.2,
                                   ),
-                                  backgroundColor: const Color(0xFFFFF5F7),
+                                  backgroundColor: const Color(0xFF261622),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -630,6 +692,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget _buildInputField({
     required TextEditingController controller,
     required String hintText,
+    IconData? prefixIcon,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
   }) {
@@ -638,23 +701,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
       keyboardType: keyboardType,
       style: const TextStyle(
         fontSize: 14,
-        color: Color(0xFF2C3238),
+        color: Colors.white,
         fontWeight: FontWeight.w500,
       ),
-      decoration: _inputDecoration(hintText: hintText),
+      decoration: _inputDecoration(
+        hintText: hintText,
+        prefixIcon: prefixIcon,
+      ),
       validator: validator,
     );
   }
 
   InputDecoration _inputDecoration({
     required String hintText,
-    Widget? prefixIcon,
+    IconData? prefixIcon,
+    Widget? prefixWidget,
     Widget? suffixIcon,
   }) {
     return InputDecoration(
       hintText: hintText,
       hintStyle: const TextStyle(
-        color: Color(0xFF9E9E9E),
+        color: Color(0xFF7A828E),
         fontSize: 14,
       ),
       contentPadding: const EdgeInsets.symmetric(
@@ -662,20 +729,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
         vertical: 14,
       ),
       filled: true,
-      fillColor: Colors.white,
-      prefixIcon: prefixIcon,
+      fillColor: const Color(0xFF141518),
+      prefixIcon: prefixWidget ?? (prefixIcon != null ? Icon(prefixIcon, color: const Color(0xFFA0AAB5), size: 20) : null),
       suffixIcon: suffixIcon,
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(
-          color: Color(0xFFE8ECEF),
+          color: Color(0xFF2E313C),
           width: 1.2,
         ),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(
-          color: Color(0xFFE8ECEF),
+          color: Color(0xFF2E313C),
           width: 1.2,
         ),
       ),

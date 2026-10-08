@@ -146,7 +146,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
   void _showCategoryPicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFF18191E),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -165,23 +165,23 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
+                        color: Colors.white,
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20),
+                      icon: const Icon(Icons.close_rounded, size: 20, color: Colors.white70),
                       onPressed: () => Navigator.pop(ctx),
                     ),
                   ],
                 ),
               ),
-              const Divider(height: 1),
+              Divider(height: 1, color: Colors.white.withValues(alpha: 0.08)),
               if (_categories.isEmpty)
                 const Padding(
                   padding: EdgeInsets.all(24),
                   child: Text(
                     'No categories found. Please add a category first.',
-                    style: TextStyle(color: AppColors.textMuted),
+                    style: TextStyle(color: Colors.white60),
                   ),
                 )
               else
@@ -189,7 +189,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: _categories.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
+                    separatorBuilder: (_, __) => Divider(height: 1, color: Colors.white.withValues(alpha: 0.06)),
                     itemBuilder: (context, idx) {
                       final cat = _categories[idx];
                       final name = (cat['cat_name'] ?? '').toString();
@@ -205,11 +205,11 @@ class _AddItemScreenState extends State<AddItemScreen> {
                           name,
                           style: TextStyle(
                             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected ? AppColors.primaryPink : AppColors.textDark,
+                            color: isSelected ? const Color(0xFFFF5277) : Colors.white,
                           ),
                         ),
                         trailing: isSelected
-                            ? const Icon(Icons.check_circle_rounded, color: AppColors.primaryPink)
+                            ? const Icon(Icons.check_circle_rounded, color: Color(0xFFFF5277))
                             : null,
                         onTap: () {
                           setState(() {
@@ -265,8 +265,26 @@ class _AddItemScreenState extends State<AddItemScreen> {
     try {
       final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
       final String imageUrl = await _uploadImage(timestamp);
-      final currentUid = FirebaseAuth.instance.currentUser?.uid;
+      final currentUser = FirebaseAuth.instance.currentUser;
+      final currentUid = currentUser?.uid;
       final restaurantId = await AuthService().getCurrentRestaurantId() ?? currentUid ?? '';
+      
+      String restName = '';
+      if (currentUid != null) {
+        try {
+          final rDoc = await FirebaseFirestore.instance
+              .collection('restaurants')
+              .doc(currentUid)
+              .get();
+          if (rDoc.exists && rDoc.data() != null) {
+            restName = (rDoc.data()!['restaurant_name'] ??
+                    rDoc.data()!['name'] ??
+                    '')
+                .toString();
+          }
+        } catch (_) {}
+      }
+
       final double originalPrice = double.tryParse(_priceController.text.trim()) ?? 0.0;
       final double discountPercent = double.tryParse(_discountController.text.trim()) ?? 0.0;
       final double finalPrice = discountPercent > 0
@@ -285,7 +303,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
         'discounted_price': double.parse(finalPrice.toStringAsFixed(2)),
         'item_pic': imageUrl,
         'restaurant_id': restaurantId,
+        'restaurant_name': restName,
         'user_id': currentUid ?? restaurantId,
+        'email': currentUser?.email?.trim().toLowerCase() ?? '',
+        'owner_email': currentUser?.email?.trim().toLowerCase() ?? '',
       };
 
       await FirebaseFirestore.instance
@@ -398,11 +419,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF18191E),
+                              Color(0xFF201620),
+                            ],
+                          ),
                           borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                            width: 1,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.02),
+                              color: const Color(0xFFFA4468).withValues(alpha: 0.08),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -418,8 +450,8 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                     : 'Choose Item Category',
                                 style: TextStyle(
                                   color: _selectedCategoryName != null && _selectedCategoryName!.isNotEmpty
-                                      ? AppColors.textDark
-                                      : AppColors.textMuted.withValues(alpha: 0.8),
+                                      ? Colors.white
+                                      : Colors.white.withValues(alpha: 0.4),
                                   fontSize: 14,
                                   fontWeight: _selectedCategoryName != null && _selectedCategoryName!.isNotEmpty
                                       ? FontWeight.w600
@@ -433,12 +465,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                     height: 16,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: AppColors.editGreen,
+                                      color: Color(0xFFFF5277),
                                     ),
                                   )
                                 : const Icon(
                                     Icons.keyboard_arrow_down_rounded,
-                                    color: AppColors.editGreen,
+                                    color: Color(0xFFFF5277),
                                     size: 24,
                                   ),
                           ],
@@ -460,11 +492,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF18191E),
+                            Color(0xFF201620),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                          width: 1,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -474,13 +517,14 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         controller: _nameController,
                         style: const TextStyle(
                           fontSize: 15,
-                          color: AppColors.textDark,
+                          color: Colors.white,
                           fontWeight: FontWeight.w500,
                         ),
+                        cursorColor: const Color(0xFFFA4468),
                         decoration: InputDecoration(
                           hintText: 'Enter Item Name',
                           hintStyle: TextStyle(
-                            color: AppColors.textMuted.withValues(alpha: 0.8),
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
                           ),
@@ -507,11 +551,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     const SizedBox(height: 8),
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF18191E),
+                            Color(0xFF201620),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                          width: 1,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -522,9 +577,10 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         style: const TextStyle(
                           fontSize: 15,
-                          color: AppColors.textDark,
+                          color: Colors.white,
                           fontWeight: FontWeight.w500,
                         ),
+                        cursorColor: const Color(0xFFFA4468),
                         decoration: InputDecoration(
                           hintText: 'Enter Item Price (e.g. 247)',
                           prefixIcon: const Padding(
@@ -534,12 +590,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
                               style: TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
-                                color: AppColors.primaryPink,
+                                color: Color(0xFFFF5277),
                               ),
                             ),
                           ),
                           hintStyle: TextStyle(
-                            color: AppColors.textMuted.withValues(alpha: 0.8),
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 14,
                             fontWeight: FontWeight.w400,
                           ),
@@ -560,7 +616,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       children: [
                         const Row(
                           children: [
-                            Icon(Icons.discount_rounded, color: AppColors.primaryPink, size: 18),
+                            Icon(Icons.discount_rounded, color: Color(0xFFFF5277), size: 18),
                             SizedBox(width: 6),
                             Text(
                               'Discount % (Special Offer)',
@@ -576,7 +632,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppColors.primaryPink.withValues(alpha: 0.12),
+                              color: const Color(0xFFFA4468).withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -584,7 +640,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                               style: const TextStyle(
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.primaryPink,
+                                color: Color(0xFFFF5277),
                               ),
                             ),
                           ),
@@ -606,12 +662,12 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                 style: TextStyle(
                                   fontSize: 11.5,
                                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                                  color: isSelected ? Colors.white : AppColors.textDark,
+                                  color: isSelected ? Colors.white : Colors.white.withValues(alpha: 0.85),
                                 ),
                               ),
                               selected: isSelected,
                               selectedColor: AppColors.primaryPink,
-                              backgroundColor: Colors.white,
+                              backgroundColor: const Color(0xFF1B1C22),
                               checkmarkColor: Colors.white,
                               showCheckmark: false,
                               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 0),
@@ -620,7 +676,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                 side: BorderSide(
                                   color: isSelected
                                       ? AppColors.primaryPink
-                                      : const Color(0xFFE2E4E8),
+                                      : const Color(0xFFFA4468).withValues(alpha: 0.3),
                                 ),
                               ),
                               onSelected: (_) {
@@ -636,11 +692,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     // Custom Discount Input Field
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFF18191E),
+                            Color(0xFF201620),
+                          ],
+                        ),
                         borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                          width: 1,
+                        ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.02),
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.08),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -651,24 +718,25 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         style: const TextStyle(
                           fontSize: 15,
-                          color: AppColors.textDark,
+                          color: Colors.white,
                           fontWeight: FontWeight.w600,
                         ),
+                        cursorColor: const Color(0xFFFA4468),
                         decoration: InputDecoration(
                           hintText: 'Enter discount percentage (e.g. 15)',
                           prefixIcon: const Icon(
                             Icons.percent_rounded,
-                            color: AppColors.primaryPink,
+                            color: Color(0xFFFF5277),
                             size: 18,
                           ),
                           suffixText: '% OFF',
                           suffixStyle: const TextStyle(
                             fontWeight: FontWeight.w800,
-                            color: AppColors.primaryPink,
+                            color: Color(0xFFFF5277),
                             fontSize: 13,
                           ),
                           hintStyle: TextStyle(
-                            color: AppColors.textMuted.withValues(alpha: 0.8),
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 13,
                             fontWeight: FontWeight.w400,
                           ),
@@ -687,15 +755,18 @@ class _AddItemScreenState extends State<AddItemScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                         decoration: BoxDecoration(
-                          color: discountVal > 0
-                              ? const Color(0xFFFFF0F3)
-                              : const Color(0xFFF8FAF9),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF18191E),
+                              Color(0xFF201620),
+                            ],
+                          ),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: discountVal > 0
-                                ? AppColors.primaryPink.withValues(alpha: 0.4)
-                                : const Color(0xFFE2E4E8),
-                            width: discountVal > 0 ? 1.5 : 1,
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                            width: 1.0,
                           ),
                         ),
                         child: Column(
@@ -710,9 +781,9 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                     children: [
                                       Text(
                                         'Original: Rs. ${rawPrice.toStringAsFixed(0)}',
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 12,
-                                          color: AppColors.textMuted,
+                                          color: Colors.white.withValues(alpha: 0.5),
                                           decoration: TextDecoration.lineThrough,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -722,14 +793,15 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                         padding: const EdgeInsets.symmetric(
                                             horizontal: 6, vertical: 2),
                                         decoration: BoxDecoration(
-                                          color: AppColors.primaryPink,
+                                          color: const Color(0xFFFA4468)
+                                              .withValues(alpha: 0.2),
                                           borderRadius:
                                               BorderRadius.circular(6),
                                         ),
                                         child: Text(
                                           '${discountVal.toStringAsFixed(0)}% off',
                                           style: const TextStyle(
-                                            color: Colors.white,
+                                            color: Color(0xFFFF5277),
                                             fontSize: 10.5,
                                             fontWeight: FontWeight.w800,
                                           ),
@@ -741,13 +813,14 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: AppColors.editGreen,
+                                      color: const Color(0xFF80BC24)
+                                          .withValues(alpha: 0.2),
                                       borderRadius: BorderRadius.circular(6),
                                     ),
                                     child: Text(
                                       'Save Rs. ${(rawPrice - computedSellingPrice).toStringAsFixed(0)}',
                                       style: const TextStyle(
-                                        color: Colors.white,
+                                        color: Color(0xFF96D42A),
                                         fontSize: 11,
                                         fontWeight: FontWeight.w800,
                                       ),
@@ -765,7 +838,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                   style: TextStyle(
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.w600,
-                                    color: AppColors.textDark,
+                                    color: Colors.white,
                                   ),
                                 ),
                                 Text(
@@ -773,7 +846,7 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w900,
-                                    color: AppColors.primaryPink,
+                                    color: Color(0xFFFF5277),
                                   ),
                                 ),
                               ],
@@ -801,15 +874,22 @@ class _AddItemScreenState extends State<AddItemScreen> {
                         width: double.infinity,
                         height: 200,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF18191E),
+                              Color(0xFF201620),
+                            ],
+                          ),
                           borderRadius: BorderRadius.circular(18),
                           border: Border.all(
-                            color: AppColors.editGreen.withValues(alpha: 0.6),
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.45),
                             width: 1.5,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.editGreen.withValues(alpha: 0.06),
+                              color: const Color(0xFFFA4468).withValues(alpha: 0.1),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -863,29 +943,29 @@ class _AddItemScreenState extends State<AddItemScreen> {
                                   ),
                                 ],
                               )
-                            : const Column(
+                            : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.cloud_upload_outlined,
                                     size: 56,
-                                    color: AppColors.editGreen,
+                                    color: Color(0xFFFF5277),
                                   ),
-                                  SizedBox(height: 10),
-                                  Text(
+                                  const SizedBox(height: 10),
+                                  const Text(
                                     'Upload Image',
                                     style: TextStyle(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w700,
-                                      color: AppColors.editGreen,
+                                      color: Color(0xFFFF5277),
                                     ),
                                   ),
-                                  SizedBox(height: 4),
+                                  const SizedBox(height: 4),
                                   Text(
                                     'Tap to select from gallery',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: AppColors.textMuted,
+                                      color: Colors.white.withValues(alpha: 0.6),
                                     ),
                                   ),
                                 ],
@@ -896,13 +976,32 @@ class _AddItemScreenState extends State<AddItemScreen> {
                     const SizedBox(height: 26),
 
                     // 4. Full-width Pink Save Button
-                    SizedBox(
+                    Container(
                       width: double.infinity,
                       height: 52,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Color(0xFFFA4468),
+                            Color(0xFFFF6283),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(14),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.4),
+                            blurRadius: 12,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
                       child: ElevatedButton(
                         onPressed: _isLoading ? null : _saveItem,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryPink,
+                          backgroundColor: Colors.transparent,
+                          shadowColor: Colors.transparent,
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),

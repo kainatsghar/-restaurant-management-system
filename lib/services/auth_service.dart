@@ -460,21 +460,28 @@ class AuthService {
     return user.uid;
   }
 
-  // Get all matching Restaurant ID variations (UID + unique_id) for filtering queries
+  // Get all matching Restaurant ID variations (UID + unique_id + email + restaurant_name) for filtering queries
   Future<List<String>> getCurrentRestaurantIds() async {
     final user = _auth.currentUser;
     if (user == null) return [];
     final List<String> ids = [user.uid];
+    if (user.email != null && user.email!.trim().isNotEmpty) {
+      ids.add(user.email!.trim().toLowerCase());
+    }
     try {
       final doc = await _firestore.collection('restaurants').doc(user.uid).get();
       if (doc.exists && doc.data() != null) {
         final data = doc.data()!;
-        final restId = (data['restaurant_id'] ?? '').toString();
-        final uniqueId = (data['unique_id'] ?? '').toString();
-        final userId = (data['user_id'] ?? '').toString();
+        final restId = (data['restaurant_id'] ?? '').toString().trim();
+        final uniqueId = (data['unique_id'] ?? '').toString().trim();
+        final userId = (data['user_id'] ?? '').toString().trim();
+        final email = (data['email'] ?? '').toString().trim().toLowerCase();
+        final name = (data['restaurant_name'] ?? data['name'] ?? '').toString().trim().toLowerCase();
         if (restId.isNotEmpty && !ids.contains(restId)) ids.add(restId);
         if (uniqueId.isNotEmpty && !ids.contains(uniqueId)) ids.add(uniqueId);
         if (userId.isNotEmpty && !ids.contains(userId)) ids.add(userId);
+        if (email.isNotEmpty && !ids.contains(email)) ids.add(email);
+        if (name.isNotEmpty && !ids.contains(name)) ids.add(name);
       }
     } catch (e) {
       debugPrint('Error getting restaurant IDs: $e');
@@ -804,6 +811,92 @@ class AuthService {
       debugPrint('Error cleaning items collection: $e');
     }
   }
+
+  // Automatically deletes any "Pizza" / "Piza" category and all associated pizza items from Firestore
+  Future<void> deletePizzaCategoryAndItems() async {
+    try {
+      final Set<String> deletedCatIds = {};
+
+      // 1. Delete all categories where name contains pizza or piza
+      final catSnap = await _firestore.collection('categories').get();
+      for (final doc in catSnap.docs) {
+        final data = doc.data();
+        final name = (data['category_name'] ?? data['cat_name'] ?? data['name'] ?? '')
+            .toString()
+            .toLowerCase()
+            .trim();
+        final type = (data['category_type'] ?? data['cat_type'] ?? data['type'] ?? '')
+            .toString()
+            .toLowerCase()
+            .trim();
+
+        if (name == 'pizza' ||
+            name == 'piza' ||
+            name.contains('pizza') ||
+            name.contains('piza') ||
+            type == 'pizza' ||
+            type == 'piza') {
+          deletedCatIds.add(doc.id);
+          final rawCatId =
+              (data['category_id'] ?? data['cat_id'] ?? '').toString().trim();
+          if (rawCatId.isNotEmpty) deletedCatIds.add(rawCatId);
+          await _firestore.collection('categories').doc(doc.id).delete();
+          debugPrint('Deleted pizza category: ${doc.id} ($name)');
+        }
+      }
+
+      // 2. Delete all items belonging to Pizza or having pizza in name
+      final itemSnap = await _firestore.collection('items').get();
+      for (final doc in itemSnap.docs) {
+        final data = doc.data();
+        final itemName = (data['item_name'] ?? data['prod_name'] ?? data['name'] ?? '')
+            .toString()
+            .toLowerCase()
+            .trim();
+        final catName = (data['category_name'] ?? data['cat_name'] ?? '')
+            .toString()
+            .toLowerCase()
+            .trim();
+        final catId =
+            (data['category_id'] ?? data['cat_id'] ?? '').toString().trim();
+
+        if (itemName.contains('pizza') ||
+            itemName.contains('piza') ||
+            catName.contains('pizza') ||
+            catName.contains('piza') ||
+            deletedCatIds.contains(catId) ||
+            deletedCatIds.contains(doc.id)) {
+          await _firestore.collection('items').doc(doc.id).delete();
+          debugPrint('Deleted pizza item: ${doc.id} ($itemName)');
+        }
+      }
+
+      // 3. Delete from products collection if present
+      final prodSnap = await _firestore.collection('products').get();
+      for (final doc in prodSnap.docs) {
+        final data = doc.data();
+        final itemName = (data['item_name'] ?? data['prod_name'] ?? '')
+            .toString()
+            .toLowerCase()
+            .trim();
+        final catName =
+            (data['category_name'] ?? '').toString().toLowerCase().trim();
+        final catId = (data['category_id'] ?? '').toString().trim();
+
+        if (itemName.contains('pizza') ||
+            itemName.contains('piza') ||
+            catName.contains('pizza') ||
+            catName.contains('piza') ||
+            deletedCatIds.contains(catId)) {
+          await _firestore.collection('products').doc(doc.id).delete();
+          debugPrint('Deleted pizza product: ${doc.id} ($itemName)');
+        }
+      }
+    } catch (e) {
+      debugPrint('Error deleting pizza category and items: $e');
+    }
+  }
+
 
   // Translate FirebaseAuth errors into friendly Urdu/English readable messages
   String _handleAuthException(FirebaseAuthException e) {

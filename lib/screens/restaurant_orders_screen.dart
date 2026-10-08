@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
+import '../widgets/app_network_image.dart';
 import 'restaurant_order_detail_screen.dart';
 
 class RestaurantOrdersScreen extends StatefulWidget {
@@ -81,49 +82,195 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
     }
   }
 
-  Widget _buildImage(String url) {
-    if (url.isEmpty) {
-      return _buildFallbackImage();
+  bool _isUsableImage(String str) {
+    final clean = str.trim();
+    if (clean.isEmpty) return false;
+    if (clean.startsWith('http://') || clean.startsWith('https://')) return true;
+    if (clean.startsWith('data:image') || clean.length > 200) return true;
+    try {
+      final f = File(clean);
+      return f.existsSync();
+    } catch (_) {
+      return false;
     }
-    if (!url.startsWith('http')) {
-      final file = File(url);
-      if (file.existsSync()) {
-        return ClipRRect(
-          borderRadius: BorderRadius.circular(12),
-          child: Image.file(
-            file,
-            width: 60,
-            height: 60,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => _buildFallbackImage(),
-          ),
-        );
-      }
+  }
+
+  Future<String?> _resolveExactOrderItemImage(Map<String, dynamic> data) async {
+    // 1. Direct picture in order document
+    final String directPic = (
+      data['item_pic'] ??
+      data['prod_pic'] ??
+      data['imageUrl'] ??
+      data['image_url'] ??
+      data['item_image'] ??
+      data['image'] ??
+      data['pic'] ??
+      data['photoUrl'] ??
+      data['product_pic'] ??
+      data['img'] ??
+      ''
+    ).toString().trim();
+
+    if (_isUsableImage(directPic)) {
+      return directPic;
     }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Image.network(
-        url,
-        width: 60,
-        height: 60,
-        fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildFallbackImage(),
-      ),
+
+    final String itemId = (data['item_id'] ?? data['prod_id'] ?? data['id'] ?? '').toString().trim();
+    final String itemName = (data['item_name'] ?? data['name'] ?? data['prod_name'] ?? '').toString().trim();
+
+    // 2. Fetch by Item ID in 'items' collection
+    if (itemId.isNotEmpty) {
+      try {
+        final doc = await FirebaseFirestore.instance.collection('items').doc(itemId).get();
+        if (doc.exists && doc.data() != null) {
+          final d = doc.data()!;
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+
+      // Try 'products' collection
+      try {
+        final doc = await FirebaseFirestore.instance.collection('products').doc(itemId).get();
+        if (doc.exists && doc.data() != null) {
+          final d = doc.data()!;
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+
+      // Query where item_id == itemId
+      try {
+        final q = await FirebaseFirestore.instance.collection('items').where('item_id', isEqualTo: itemId).limit(1).get();
+        if (q.docs.isNotEmpty) {
+          final d = q.docs.first.data();
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+
+      // Query where prod_id == itemId
+      try {
+        final q = await FirebaseFirestore.instance.collection('products').where('prod_id', isEqualTo: itemId).limit(1).get();
+        if (q.docs.isNotEmpty) {
+          final d = q.docs.first.data();
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+    }
+
+    // 3. Fetch by Item Name in 'items' or 'products'
+    if (itemName.isNotEmpty) {
+      try {
+        final q = await FirebaseFirestore.instance.collection('items').where('item_name', isEqualTo: itemName).limit(1).get();
+        if (q.docs.isNotEmpty) {
+          final d = q.docs.first.data();
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+
+      try {
+        final q = await FirebaseFirestore.instance.collection('products').where('prod_name', isEqualTo: itemName).limit(1).get();
+        if (q.docs.isNotEmpty) {
+          final d = q.docs.first.data();
+          final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+
+      // Scan items collection for case-insensitive match
+      try {
+        final snap = await FirebaseFirestore.instance.collection('items').get();
+        final lowerName = itemName.toLowerCase().trim();
+        for (final doc in snap.docs) {
+          final d = doc.data();
+          final dName = (d['item_name'] ?? d['prod_name'] ?? d['name'] ?? '').toString().toLowerCase().trim();
+          if (dName == lowerName || (dName.isNotEmpty && (dName.contains(lowerName) || lowerName.contains(dName)))) {
+            final p = (d['item_pic'] ?? d['prod_pic'] ?? d['imageUrl'] ?? d['image_url'] ?? d['image'] ?? d['pic'] ?? '').toString().trim();
+            if (_isUsableImage(p)) return p;
+          }
+        }
+      } catch (_) {}
+    }
+
+    // 4. Try Category if available
+    final String catId = (data['category_id'] ?? data['cat_id'] ?? '').toString().trim();
+    final String catName = (data['category_name'] ?? data['cat_name'] ?? '').toString().trim();
+    if (catId.isNotEmpty) {
+      try {
+        final cDoc = await FirebaseFirestore.instance.collection('categories').doc(catId).get();
+        if (cDoc.exists && cDoc.data() != null) {
+          final d = cDoc.data()!;
+          final p = (d['cat_pic'] ?? d['category_pic'] ?? d['imageUrl'] ?? d['image'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+    }
+
+    if (catName.isNotEmpty) {
+      try {
+        final cSnap = await FirebaseFirestore.instance.collection('categories').where('category_name', isEqualTo: catName).limit(1).get();
+        if (cSnap.docs.isNotEmpty) {
+          final d = cSnap.docs.first.data();
+          final p = (d['cat_pic'] ?? d['category_pic'] ?? d['imageUrl'] ?? d['image'] ?? '').toString().trim();
+          if (_isUsableImage(p)) return p;
+        }
+      } catch (_) {}
+    }
+
+    if (directPic.isNotEmpty) return directPic;
+    return null;
+  }
+
+  Widget _buildOrderItemImage(Map<String, dynamic> data) {
+    return FutureBuilder<String?>(
+      future: _resolveExactOrderItemImage(data),
+      builder: (context, snapshot) {
+        final String imgUrl = snapshot.data ?? '';
+        if (imgUrl.isNotEmpty) {
+          return Container(
+            width: 64,
+            height: 64,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                width: 1,
+              ),
+            ),
+            child: AppNetworkImage(
+              imageUrl: imgUrl,
+              width: 64,
+              height: 64,
+              borderRadius: 14,
+              fit: BoxFit.cover,
+              fallbackIcon: Icons.restaurant_menu_rounded,
+            ),
+          );
+        }
+        return _buildFallbackImage();
+      },
     );
   }
 
   Widget _buildFallbackImage() {
     return Container(
-      width: 60,
-      height: 60,
+      width: 64,
+      height: 64,
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F2),
-        borderRadius: BorderRadius.circular(12),
+        color: const Color(0xFF26272E),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: const Color(0xFFFA4468).withValues(alpha: 0.25),
+          width: 1,
+        ),
       ),
       child: const Center(
         child: Icon(
-          Icons.restaurant_rounded,
-          color: AppColors.textMuted,
+          Icons.restaurant_menu_rounded,
+          color: Color(0xFFFF5277),
           size: 26,
         ),
       ),
@@ -240,12 +387,22 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
               child: Container(
                 height: 44,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Color(0xFF18191E),
+                      Color(0xFF201620),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: AppColors.inputBorder),
+                  border: Border.all(
+                    color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                    width: 1,
+                  ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.02),
+                      color: const Color(0xFFFA4468).withValues(alpha: 0.08),
                       blurRadius: 6,
                       offset: const Offset(0, 2),
                     ),
@@ -256,26 +413,27 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
                   onChanged: (val) => setState(() => _searchQuery = val),
                   style: const TextStyle(
                     fontSize: 13.5,
-                    color: AppColors.textDark,
+                    color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
+                  cursorColor: const Color(0xFFFA4468),
                   decoration: InputDecoration(
                     hintText: 'Search customer name, item, or order ID...',
-                    hintStyle: const TextStyle(
-                      color: AppColors.textMuted,
+                    hintStyle: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.4),
                       fontSize: 12.5,
                     ),
                     prefixIcon: const Icon(
                       Icons.search_rounded,
-                      color: AppColors.primaryPink,
+                      color: Color(0xFFFF5277),
                       size: 20,
                     ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(
+                            icon: Icon(
                               Icons.clear_rounded,
                               size: 16,
-                              color: AppColors.textMuted,
+                              color: Colors.white.withValues(alpha: 0.6),
                             ),
                             onPressed: () {
                               _searchController.clear();
@@ -444,23 +602,33 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
                         margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          gradient: const LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              Color(0xFF18191E),
+                              Color(0xFF201620),
+                            ],
+                          ),
                           borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFF1F3F5)),
+                          border: Border.all(
+                            color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                            width: 1,
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Row(
                               children: [
-                                const Icon(Icons.shopping_bag_outlined, size: 16, color: AppColors.primaryPink),
+                                const Icon(Icons.shopping_bag_outlined, size: 16, color: Color(0xFFFF5277)),
                                 const SizedBox(width: 6),
                                 Text(
                                   '${filteredOrders.length} ${filteredOrders.length == 1 ? 'Order' : 'Orders'}',
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.textDark,
+                                    color: Colors.white,
                                   ),
                                 ),
                               ],
@@ -470,7 +638,7 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
                               style: const TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
-                                color: AppColors.primaryPink,
+                                color: Color(0xFFFF5277),
                               ),
                             ),
                           ],
@@ -489,7 +657,6 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
 
                             final customerName = (data['user_name'] ?? data['customer_name'] ?? 'Customer').toString();
                             final itemName = (data['item_name'] ?? 'Dish').toString();
-                            final itemPic = (data['item_pic'] ?? data['imageUrl'] ?? '').toString();
                             final categoryName = (data['category_name'] ?? '').toString();
 
                             final qtyRaw = data['quantity'] ?? 1;
@@ -516,12 +683,27 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
                             return Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                gradient: const LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    Color(0xFF18191E),
+                                    Color(0xFF201620),
+                                  ],
+                                ),
                                 borderRadius: BorderRadius.circular(18),
-                                border: Border.all(color: const Color(0xFFF1F3F5), width: 1.2),
+                                border: Border.all(
+                                  color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                                  width: 1.0,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.03),
+                                    color: const Color(0xFFFA4468).withValues(alpha: 0.08),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 3),
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.3),
                                     blurRadius: 8,
                                     offset: const Offset(0, 3),
                                   ),
@@ -553,8 +735,12 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                               decoration: BoxDecoration(
-                                                color: statusColor.withValues(alpha: 0.1),
+                                                color: statusColor.withValues(alpha: 0.15),
                                                 borderRadius: BorderRadius.circular(8),
+                                                border: Border.all(
+                                                  color: statusColor.withValues(alpha: 0.4),
+                                                  width: 1,
+                                                ),
                                               ),
                                               child: Text(
                                                 status.toUpperCase(),
@@ -568,22 +754,25 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
                                             if (orderTime.isNotEmpty)
                                               Text(
                                                 orderTime,
-                                                style: const TextStyle(
+                                                style: TextStyle(
                                                   fontSize: 11,
-                                                  color: AppColors.textMuted,
+                                                  color: Colors.white.withValues(alpha: 0.6),
                                                   fontWeight: FontWeight.w500,
                                                 ),
                                               ),
                                           ],
                                         ),
                                         const SizedBox(height: 10),
-                                        const Divider(height: 1),
+                                        Divider(
+                                          height: 1,
+                                          color: Colors.white.withValues(alpha: 0.08),
+                                        ),
                                         const SizedBox(height: 10),
 
                                         // Item & Customer Info Row
                                         Row(
                                           children: [
-                                            _buildImage(itemPic),
+                                            _buildOrderItemImage(data),
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: Column(
@@ -594,7 +783,7 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
                                                     style: const TextStyle(
                                                       fontSize: 15,
                                                       fontWeight: FontWeight.w700,
-                                                      color: AppColors.textDark,
+                                                      color: Colors.white,
                                                     ),
                                                     maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
@@ -605,7 +794,7 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
                                                       categoryName,
                                                       style: const TextStyle(
                                                         fontSize: 11,
-                                                        color: AppColors.primaryPink,
+                                                        color: Color(0xFFFF5277),
                                                         fontWeight: FontWeight.w600,
                                                       ),
                                                       maxLines: 1,
@@ -615,14 +804,18 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
                                                   const SizedBox(height: 2),
                                                   Row(
                                                     children: [
-                                                      const Icon(Icons.person_outline_rounded, size: 13, color: AppColors.textMuted),
+                                                      Icon(
+                                                        Icons.person_outline_rounded,
+                                                        size: 13,
+                                                        color: Colors.white.withValues(alpha: 0.6),
+                                                      ),
                                                       const SizedBox(width: 4),
                                                       Expanded(
                                                         child: Text(
                                                           customerName,
-                                                          style: const TextStyle(
+                                                          style: TextStyle(
                                                             fontSize: 12,
-                                                            color: AppColors.textMuted,
+                                                            color: Colors.white.withValues(alpha: 0.7),
                                                             fontWeight: FontWeight.w600,
                                                           ),
                                                           maxLines: 1,
@@ -640,25 +833,29 @@ class _RestaurantOrdersScreenState extends State<RestaurantOrdersScreen> {
                                                 Container(
                                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                                   decoration: BoxDecoration(
-                                                    color: const Color(0xFFF1F3F5),
+                                                    color: const Color(0xFFFA4468).withValues(alpha: 0.15),
                                                     borderRadius: BorderRadius.circular(6),
+                                                    border: Border.all(
+                                                      color: const Color(0xFFFA4468).withValues(alpha: 0.3),
+                                                      width: 1,
+                                                    ),
                                                   ),
                                                   child: Text(
                                                     'Qty: $quantity',
                                                     style: const TextStyle(
                                                       fontSize: 11,
                                                       fontWeight: FontWeight.w700,
-                                                      color: AppColors.textDark,
+                                                      color: Color(0xFFFF5277),
                                                     ),
                                                   ),
                                                 ),
                                                 const SizedBox(height: 4),
                                                 Text(
-                                                  'Rs. ${totalPrice.toStringAsFixed(2)}',
+                                                  'Rs. ${totalPrice.toStringAsFixed(0)}',
                                                   style: const TextStyle(
-                                                    fontSize: 14.5,
+                                                    fontSize: 14,
                                                     fontWeight: FontWeight.w800,
-                                                    color: AppColors.primaryPink,
+                                                    color: Color(0xFFFF5277),
                                                   ),
                                                 ),
                                               ],

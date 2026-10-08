@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../constants/app_colors.dart';
 import '../services/auth_service.dart';
 import '../widgets/social_icons.dart';
 import 'home_menu_screen.dart';
@@ -144,12 +143,17 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
         builder: (context, setDialogState) => AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
+            side: BorderSide(
+              color: const Color(0xFFFA4468).withValues(alpha: 0.3),
+              width: 1.2,
+            ),
           ),
+          backgroundColor: const Color(0xFF1A1B20),
           title: const Text(
             'Reset Password',
             style: TextStyle(
               fontWeight: FontWeight.bold,
-              color: AppColors.textDark,
+              color: Colors.white,
               fontSize: 18,
             ),
           ),
@@ -160,7 +164,7 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
               const Text(
                 'Enter your restaurant email address to receive password reset instructions.',
                 style: TextStyle(
-                  color: AppColors.textMuted,
+                  color: Colors.white70,
                   fontSize: 13,
                 ),
               ),
@@ -168,25 +172,27 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
               TextField(
                 controller: resetEmailController,
                 keyboardType: TextInputType.emailAddress,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
                 decoration: InputDecoration(
                   hintText: 'Enter your email',
+                  hintStyle: const TextStyle(color: Color(0xFF7A828E), fontSize: 14),
                   filled: true,
-                  fillColor: const Color(0xFFF8FAFB),
+                  fillColor: const Color(0xFF141518),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 12,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE8ECEF)),
+                    borderSide: const BorderSide(color: Color(0xFF2E313C)),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE8ECEF)),
+                    borderSide: const BorderSide(color: Color(0xFF2E313C)),
                   ),
                   focusedBorder: const OutlineInputBorder(
                     borderRadius: BorderRadius.all(Radius.circular(12)),
-                    borderSide: BorderSide(color: Color(0xFFFA4468)),
+                    borderSide: BorderSide(color: Color(0xFFFA4468), width: 1.5),
                   ),
                 ),
               ),
@@ -197,7 +203,7 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
               onPressed: () => Navigator.pop(dialogContext),
               child: const Text(
                 'Cancel',
-                style: TextStyle(color: AppColors.textMuted),
+                style: TextStyle(color: Colors.white60),
               ),
             ),
             ElevatedButton(
@@ -241,7 +247,7 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                         strokeWidth: 2,
                       ),
                     )
-                  : const Text('Send Reset Link'),
+                  : const Text('Send Reset Link', style: TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -297,14 +303,14 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F6F8),
+      backgroundColor: const Color(0xFF0F1015),
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Top Section: Red/Crimson Header matching Image 3
+            // Top Section: Black + Dark Rose Header with Pink Accents
             _buildTopHeader(),
 
-            // Floating White Card overlapping the background
+            // Floating Black + Pink Card overlapping the header
             Transform.translate(
               offset: const Offset(0, -60),
               child: Padding(
@@ -325,11 +331,14 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 260),
       decoration: const BoxDecoration(
-        color: Color(0xFFFA4468),
-        image: DecorationImage(
-          image: AssetImage('assets/images/pattern_dots.png'),
-          fit: BoxFit.cover,
-          opacity: 0.05,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF381420),
+            Color(0xFF261822),
+            Color(0xFF141518),
+          ],
         ),
       ),
       child: SafeArea(
@@ -349,8 +358,12 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                       width: 38,
                       height: 38,
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
+                        color: const Color(0xFF1E1F24),
                         borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: const Color(0xFFFA4468).withValues(alpha: 0.3),
+                          width: 1,
+                        ),
                       ),
                       child: const Icon(
                         Icons.arrow_back_ios_new_rounded,
@@ -365,15 +378,19 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.22),
+                      color: const Color(0xFFFA4468).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFFFA4468).withValues(alpha: 0.4),
+                        width: 1,
+                      ),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
                           Icons.restaurant_menu_rounded,
-                          color: Colors.white,
+                          color: Color(0xFFFA4468),
                           size: 14,
                         ),
                         SizedBox(width: 6),
@@ -392,7 +409,7 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
               ),
               const SizedBox(height: 28),
 
-              // Large White Title matching Image 3
+              // Large White Title
               Text(
                 _isSignUp ? 'Register your\nRestaurant' : 'Sign in to your\nAccount',
                 style: const TextStyle(
@@ -410,9 +427,9 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                 _isSignUp
                     ? 'Create a restaurant account to manage your menu'
                     : 'Enter your email and password to log in',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 13,
-                  color: Colors.white.withValues(alpha: 0.88),
+                  color: Color(0xFFA0AAB5),
                   fontWeight: FontWeight.w400,
                 ),
               ),
@@ -428,13 +445,30 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1A1B20),
+            Color(0xFF261822),
+            Color(0xFF381420),
+          ],
+        ),
         borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: const Color(0xFFFA4468).withValues(alpha: 0.3),
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: const Color(0xFFFA4468).withValues(alpha: 0.12),
             blurRadius: 26,
             offset: const Offset(0, 10),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.5),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -443,15 +477,15 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Continue with Google Button matching Image 3
+            // Continue with Google Button
             _buildGoogleButton(),
             const SizedBox(height: 20),
 
-            // Or login with Divider matching Image 3
+            // Or login with Divider
             Row(
               children: [
                 const Expanded(
-                  child: Divider(color: Color(0xFFE5E7EB), thickness: 1),
+                  child: Divider(color: Color(0xFF2E313C), thickness: 1),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 14),
@@ -459,13 +493,13 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                     _isSignUp ? 'Or register with' : 'Or login with',
                     style: const TextStyle(
                       fontSize: 12,
-                      color: Color(0xFF9CA3AF),
+                      color: Color(0xFFA0AAB5),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
                 const Expanded(
-                  child: Divider(color: Color(0xFFE5E7EB), thickness: 1),
+                  child: Divider(color: Color(0xFF2E313C), thickness: 1),
                 ),
               ],
             ),
@@ -561,7 +595,7 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                                 setState(() => _rememberMe = val ?? false),
                             activeColor: const Color(0xFFFA4468),
                             side: const BorderSide(
-                              color: Color(0xFFD1D5DB),
+                              color: Color(0xFF5E6573),
                               width: 1.4,
                             ),
                             shape: RoundedRectangleBorder(
@@ -574,7 +608,7 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                           'Remember me',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF6B7280),
+                            color: Colors.white70,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -599,9 +633,22 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
             const SizedBox(height: 22),
 
             // Primary Action Button (Log In / Register Restaurant)
-            SizedBox(
+            Container(
               width: double.infinity,
               height: 50,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFA4468), Color(0xFFFF6584)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFA4468).withValues(alpha: 0.35),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
               child: ElevatedButton(
                 onPressed: _isLoading
                     ? null
@@ -609,9 +656,9 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                         ? _handleRestaurantSignUp
                         : _handleRestaurantLogin),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFA4468),
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
                   foregroundColor: Colors.white,
-                  elevation: 0,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -644,7 +691,7 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                   "Don't have a restaurant account? ",
                   style: TextStyle(
                     fontSize: 13,
-                    color: Color(0xFF6B7280),
+                    color: Color(0xFFA0AAB5),
                   ),
                 ),
                 GestureDetector(
@@ -675,14 +722,14 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                 icon: const Icon(
                   Icons.person_outline_rounded,
                   size: 16,
-                  color: Color(0xFF9CA3AF),
+                  color: Color(0xFFA0AAB5),
                 ),
                 label: const Text(
                   'Switch to Customer / User Login',
                   style: TextStyle(
                     fontSize: 12,
-                    color: Color(0xFF6B7280),
-                    fontWeight: FontWeight.w500,
+                    color: Color(0xFFFA4468),
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
@@ -701,15 +748,15 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
         width: double.infinity,
         height: 50,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: const Color(0xFF1E1F24),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: const Color(0xFFE5E7EB),
+            color: const Color(0xFF2E313C),
             width: 1.2,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.02),
+              color: Colors.black.withValues(alpha: 0.25),
               blurRadius: 4,
               offset: const Offset(0, 1),
             ),
@@ -725,7 +772,7 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFF374151),
+                color: Colors.white,
               ),
             ),
           ],
@@ -742,7 +789,7 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF374151),
+          color: Colors.white70,
         ),
       ),
     );
@@ -765,20 +812,20 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
       validator: validator,
       style: const TextStyle(
         fontSize: 14,
-        color: Color(0xFF1F2937),
+        color: Colors.white,
         fontWeight: FontWeight.w500,
       ),
       decoration: InputDecoration(
         hintText: hintText,
         hintStyle: const TextStyle(
           fontSize: 14,
-          color: Color(0xFF9CA3AF),
+          color: Color(0xFF7A828E),
           fontWeight: FontWeight.w400,
         ),
         prefixIcon: Icon(
           icon,
           size: 19,
-          color: const Color(0xFF9CA3AF),
+          color: const Color(0xFFA0AAB5),
         ),
         suffixIcon: isPassword
             ? IconButton(
@@ -788,20 +835,20 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
                       ? Icons.visibility_outlined
                       : Icons.visibility_off_outlined,
                   size: 19,
-                  color: const Color(0xFF9CA3AF),
+                  color: const Color(0xFFA0AAB5),
                 ),
               )
             : null,
         filled: true,
-        fillColor: const Color(0xFFF9FAFB),
+        fillColor: const Color(0xFF141518),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+          borderSide: const BorderSide(color: Color(0xFF2E313C), width: 1.2),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB), width: 1),
+          borderSide: const BorderSide(color: Color(0xFF2E313C), width: 1.2),
         ),
         focusedBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
@@ -809,7 +856,7 @@ class _RestaurantLoginScreenState extends State<RestaurantLoginScreen> {
         ),
         errorBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
-          borderSide: BorderSide(color: Color(0xFFEF4444), width: 1),
+          borderSide: BorderSide(color: Color(0xFFEF4444), width: 1.2),
         ),
         focusedErrorBorder: const OutlineInputBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),

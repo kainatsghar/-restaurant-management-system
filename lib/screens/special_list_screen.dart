@@ -144,15 +144,15 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                         width: 38,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: const Color(0xFF1E1F24),
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: AppColors.inputBorder,
+                            color: const Color(0xFF2E313C),
                             width: 1,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.03),
+                              color: Colors.black.withValues(alpha: 0.12),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -160,7 +160,7 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                         ),
                         child: const Icon(
                           Icons.arrow_back_ios_new_rounded,
-                          color: AppColors.textDark,
+                          color: AppColors.primaryPink,
                           size: 18,
                         ),
                       ),
@@ -207,15 +207,15 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
               child: Container(
                 height: 46,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: const Color(0xFF1E1F24),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: AppColors.inputBorder,
+                    color: const Color(0xFF2E313C),
                     width: 1,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.03),
+                      color: Colors.black.withValues(alpha: 0.12),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -231,13 +231,13 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                   },
                   style: const TextStyle(
                     fontSize: 14,
-                    color: AppColors.textDark,
+                    color: Colors.white,
                     fontWeight: FontWeight.w500,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Search special dishes or categories...',
                     hintStyle: const TextStyle(
-                      color: AppColors.textMuted,
+                      color: Color(0xFF8E92A0),
                       fontSize: 13,
                     ),
                     prefixIcon: const Icon(
@@ -249,7 +249,7 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                         ? IconButton(
                             icon: const Icon(
                               Icons.clear_rounded,
-                              color: AppColors.textMuted,
+                              color: Colors.white60,
                               size: 18,
                             ),
                             onPressed: () {
@@ -437,16 +437,29 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 gradient: const LinearGradient(
-                                  colors: [Color(0xFFFF5252), Color(0xFFFF7A00)],
+                                  colors: [
+                                    Color(0xFF1A1B20), // Deep obsidian charcoal
+                                    Color(0xFF2E1624), // Rich dark plum/rose
+                                    Color(0xFF7A152E), // Deep crimson/pink accent
+                                  ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                 ),
                                 borderRadius: BorderRadius.circular(18),
+                                border: Border.all(
+                                  color: AppColors.primaryPink.withValues(alpha: 0.35),
+                                  width: 1.2,
+                                ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(0xFFFF5252).withValues(alpha: 0.3),
-                                    blurRadius: 12,
+                                    color: AppColors.primaryPink.withValues(alpha: 0.22),
+                                    blurRadius: 14,
                                     offset: const Offset(0, 4),
+                                  ),
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.2),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
                                   ),
                                 ],
                               ),
@@ -459,12 +472,24 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                       children: [
                                         Container(
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 3),
+                                              horizontal: 9, vertical: 3.5),
                                           decoration: BoxDecoration(
-                                            color: Colors.white
-                                                .withValues(alpha: 0.25),
+                                            gradient: const LinearGradient(
+                                              colors: [
+                                                Color(0xFFFA4468),
+                                                Color(0xFFFF6584),
+                                              ],
+                                            ),
                                             borderRadius:
-                                                BorderRadius.circular(6),
+                                                BorderRadius.circular(7),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: AppColors.primaryPink
+                                                    .withValues(alpha: 0.4),
+                                                blurRadius: 6,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
                                           ),
                                           child: const Text(
                                             'HOT SPECIALS 🔥',
@@ -472,25 +497,26 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                               color: Colors.white,
                                               fontSize: 11,
                                               fontWeight: FontWeight.w800,
-                                              letterSpacing: 0.5,
+                                              letterSpacing: 0.3,
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(height: 6),
+                                        const SizedBox(height: 8),
                                         const Text(
                                           'Exclusive Chef Deals & Offers',
                                           style: TextStyle(
                                             color: Colors.white,
-                                            fontSize: 16,
+                                            fontSize: 16.5,
                                             fontWeight: FontWeight.w800,
+                                            letterSpacing: -0.2,
                                           ),
                                         ),
-                                        const SizedBox(height: 2),
+                                        const SizedBox(height: 3),
                                         Text(
                                           'Order directly from these hand-picked specials!',
                                           style: TextStyle(
                                             color: Colors.white
-                                                .withValues(alpha: 0.9),
+                                                .withValues(alpha: 0.88),
                                             fontSize: 12,
                                           ),
                                         ),
@@ -499,18 +525,38 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                   ),
                                   const SizedBox(width: 8),
                                   Container(
-                                    width: 50,
-                                    height: 50,
+                                    width: 52,
+                                    height: 52,
                                     decoration: BoxDecoration(
-                                      color: Colors.white
-                                          .withValues(alpha: 0.2),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          AppColors.primaryPink
+                                              .withValues(alpha: 0.35),
+                                          Colors.black.withValues(alpha: 0.5),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
                                       shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: AppColors.primaryPink
+                                            .withValues(alpha: 0.5),
+                                        width: 1.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.primaryPink
+                                              .withValues(alpha: 0.25),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
                                     ),
                                     child: const Center(
                                       child: Icon(
                                         Icons.restaurant_rounded,
-                                        color: Colors.white,
-                                        size: 28,
+                                        color: Color(0xFFFF6584),
+                                        size: 26,
                                       ),
                                     ),
                                   ),
@@ -558,7 +604,7 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 SizedBox(
-                                  height: 160,
+                                  height: 182,
                                   child: ListView.separated(
                                     scrollDirection: Axis.horizontal,
                                     padding: const EdgeInsets.symmetric(
@@ -603,118 +649,128 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                           );
                                         },
                                         child: Container(
-                                          width: 128,
+                                          width: 156,
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
+                                            color: const Color(0xFF1E1F24),
                                             borderRadius:
                                                 BorderRadius.circular(16),
                                             border: Border.all(
-                                              color: const Color(0xFFFFD54F)
-                                                  .withValues(alpha: 0.8),
-                                              width: 1.5,
+                                              color: const Color(0xFF2E313C),
+                                              width: 1,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
                                                 color: Colors.black
-                                                    .withValues(alpha: 0.04),
-                                                blurRadius: 8,
-                                                offset: const Offset(0, 3),
+                                                    .withValues(alpha: 0.18),
+                                                blurRadius: 10,
+                                                offset: const Offset(0, 4),
                                               ),
                                             ],
                                           ),
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Stack(
-                                                children: [
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(6),
-                                                    child: _buildImage(
-                                                      pic,
-                                                      width: 116,
-                                                      height: 85,
-                                                      borderRadius: 12,
-                                                    ),
-                                                  ),
-                                                  Positioned(
-                                                    top: 10,
-                                                    left: 10,
-                                                    child: Container(
-                                                      padding: const EdgeInsets
-                                                          .symmetric(
-                                                          horizontal: 6,
-                                                          vertical: 2),
-                                                      decoration: BoxDecoration(
-                                                        color: const Color(
-                                                            0xFFFF5252),
-                                                        borderRadius:
-                                                            BorderRadius
-                                                                .circular(6),
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Stack(
+                                                  children: [
+                                                    ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(12),
+                                                      child: SizedBox(
+                                                        width: double.infinity,
+                                                        height: 104,
+                                                        child: _buildImage(
+                                                          pic,
+                                                          width: double.infinity,
+                                                          height: 104,
+                                                          borderRadius: 12,
+                                                        ),
                                                       ),
-                                                      child: const Row(
-                                                        mainAxisSize:
-                                                            MainAxisSize.min,
-                                                        children: [
-                                                          Icon(
-                                                            Icons
-                                                                .local_fire_department_rounded,
-                                                            color: Colors.white,
-                                                            size: 10,
+                                                    ),
+                                                    Positioned(
+                                                      top: 6,
+                                                      left: 6,
+                                                      child: Container(
+                                                        padding: const EdgeInsets
+                                                            .symmetric(
+                                                            horizontal: 6,
+                                                            vertical: 2.5),
+                                                        decoration: BoxDecoration(
+                                                          gradient: const LinearGradient(
+                                                            colors: [
+                                                              Color(0xFFFA4468),
+                                                              Color(0xFFFF6584),
+                                                            ],
                                                           ),
-                                                          SizedBox(width: 2),
-                                                          Text(
-                                                            'HOT',
-                                                            style: TextStyle(
-                                                              color:
-                                                                  Colors.white,
-                                                              fontSize: 9,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w900,
+                                                          borderRadius:
+                                                              BorderRadius
+                                                                  .circular(6),
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: AppColors.primaryPink
+                                                                  .withValues(alpha: 0.4),
+                                                              blurRadius: 4,
+                                                              offset: const Offset(0, 1),
                                                             ),
-                                                          ),
-                                                        ],
+                                                          ],
+                                                        ),
+                                                        child: const Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .local_fire_department_rounded,
+                                                              color: Colors.white,
+                                                              size: 10,
+                                                            ),
+                                                            SizedBox(width: 2),
+                                                            Text(
+                                                              'HOT',
+                                                              style: TextStyle(
+                                                                color:
+                                                                    Colors.white,
+                                                                fontSize: 9,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w900,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 8),
-                                                child: Text(
+                                                  ],
+                                                ),
+                                                const SizedBox(height: 7),
+                                                Text(
                                                   name,
                                                   style: const TextStyle(
-                                                    fontSize: 12,
+                                                    fontSize: 13.5,
                                                     fontWeight: FontWeight.w700,
-                                                    color: AppColors.textDark,
+                                                    color: Colors.white,
+                                                    letterSpacing: -0.2,
                                                   ),
                                                   maxLines: 1,
                                                   overflow:
                                                       TextOverflow.ellipsis,
                                                 ),
-                                              ),
-                                              const SizedBox(height: 2),
-                                              Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 8),
-                                                child: Text(
+                                                const SizedBox(height: 2),
+                                                Text(
                                                   tag,
                                                   style: const TextStyle(
-                                                    fontSize: 10,
+                                                    fontSize: 11,
                                                     fontWeight: FontWeight.w600,
-                                                    color: AppColors.primaryPink,
+                                                    color: Color(0xFFFF6584),
                                                   ),
                                                   maxLines: 1,
                                                   overflow:
                                                       TextOverflow.ellipsis,
                                                 ),
-                                              ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       );
@@ -821,16 +877,30 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                   return Container(
                                     margin: const EdgeInsets.only(bottom: 12),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      gradient: const LinearGradient(
+                                        colors: [
+                                          Color(0xFF1A1B20), // Deep obsidian charcoal
+                                          Color(0xFF261822), // Dark plum/rose undertone
+                                          Color(0xFF381420), // Subtle pinkish-dark glow
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
                                       borderRadius: BorderRadius.circular(16),
                                       border: Border.all(
-                                        color: const Color(0xFFF1F3F5),
-                                        width: 1,
+                                        color: AppColors.primaryPink.withValues(alpha: 0.28),
+                                        width: 1.1,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
                                           color: Colors.black
-                                              .withValues(alpha: 0.03),
+                                              .withValues(alpha: 0.2),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                        BoxShadow(
+                                          color: AppColors.primaryPink
+                                              .withValues(alpha: 0.08),
                                           blurRadius: 8,
                                           offset: const Offset(0, 2),
                                         ),
@@ -877,11 +947,15 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                                     child: Container(
                                                       padding:
                                                           const EdgeInsets.symmetric(
-                                                              horizontal: 5,
+                                                              horizontal: 6,
                                                               vertical: 2),
                                                       decoration: BoxDecoration(
-                                                        color:
-                                                            const Color(0xFFFFA000),
+                                                        gradient: const LinearGradient(
+                                                          colors: [
+                                                            Color(0xFFFA4468),
+                                                            Color(0xFFFF6584),
+                                                          ],
+                                                        ),
                                                         borderRadius:
                                                             BorderRadius.circular(4),
                                                       ),
@@ -911,7 +985,7 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                                       style: const TextStyle(
                                                         fontSize: 15,
                                                         fontWeight: FontWeight.w700,
-                                                        color: AppColors.textDark,
+                                                        color: Colors.white,
                                                       ),
                                                       maxLines: 1,
                                                       overflow: TextOverflow.ellipsis,
@@ -921,7 +995,7 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                                       catName,
                                                       style: const TextStyle(
                                                         fontSize: 11,
-                                                        color: AppColors.primaryPink,
+                                                        color: Color(0xFFFF6584),
                                                         fontWeight: FontWeight.w600,
                                                       ),
                                                       maxLines: 1,
@@ -931,9 +1005,9 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                                       const SizedBox(height: 2),
                                                       Text(
                                                         desc,
-                                                        style: const TextStyle(
+                                                        style: TextStyle(
                                                           fontSize: 11,
-                                                          color: AppColors.textMuted,
+                                                          color: Colors.white.withValues(alpha: 0.65),
                                                         ),
                                                         maxLines: 1,
                                                         overflow:
@@ -949,8 +1023,9 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                                             'Rs. ${displayOriginalPrice.toStringAsFixed(0)}',
                                                             style: const TextStyle(
                                                               fontSize: 11.5,
-                                                              color: AppColors.textMuted,
+                                                              color: Colors.white38,
                                                               decoration: TextDecoration.lineThrough,
+                                                              decorationColor: Colors.white38,
                                                               fontWeight: FontWeight.w500,
                                                             ),
                                                           ),
@@ -960,7 +1035,7 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                                                 horizontal: 5, vertical: 1.5),
                                                             decoration: BoxDecoration(
                                                               color: AppColors.primaryPink
-                                                                  .withValues(alpha: 0.12),
+                                                                  .withValues(alpha: 0.25),
                                                               borderRadius:
                                                                   BorderRadius.circular(4),
                                                             ),
@@ -969,7 +1044,7 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                                               style: const TextStyle(
                                                                 fontSize: 9.5,
                                                                 fontWeight: FontWeight.w800,
-                                                                color: AppColors.primaryPink,
+                                                                color: Color(0xFFFF5277),
                                                               ),
                                                             ),
                                                           ),
@@ -978,11 +1053,11 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
                                                       const SizedBox(height: 2),
                                                     ],
                                                     Text(
-                                                      'Rs. ${displayFinalPrice.toStringAsFixed(2)}',
+                                                      'Rs. ${displayFinalPrice.toStringAsFixed(price % 1 == 0 ? 0 : 2)}',
                                                       style: const TextStyle(
                                                         fontSize: 14.5,
                                                         fontWeight: FontWeight.w800,
-                                                        color: AppColors.primaryPink,
+                                                        color: Color(0xFFFF5277),
                                                       ),
                                                     ),
                                                   ],
@@ -1057,18 +1132,23 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primaryPink : Colors.white,
+          gradient: isSelected
+              ? const LinearGradient(
+                  colors: [Color(0xFFFA4468), Color(0xFFFF6584)],
+                )
+              : null,
+          color: isSelected ? null : const Color(0xFF1E1F24),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
             color: isSelected
                 ? AppColors.primaryPink
-                : Colors.black.withValues(alpha: 0.08),
+                : const Color(0xFF2E313C),
           ),
           boxShadow: [
             BoxShadow(
               color: isSelected
-                  ? AppColors.primaryPink.withValues(alpha: 0.2)
-                  : Colors.black.withValues(alpha: 0.02),
+                  ? AppColors.primaryPink.withValues(alpha: 0.25)
+                  : Colors.black.withValues(alpha: 0.1),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -1079,7 +1159,7 @@ class _SpecialListScreenState extends State<SpecialListScreen> {
           style: TextStyle(
             fontSize: 12,
             fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected ? Colors.white : AppColors.textDark,
+            color: isSelected ? Colors.white : Colors.white70,
           ),
         ),
       ),
@@ -1098,25 +1178,38 @@ class _AddToCartButton extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onAdd,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(20),
         child: Container(
-          width: 36,
-          height: 36,
+          width: 38,
+          height: 38,
           decoration: BoxDecoration(
-            color: AppColors.editGreen,
-            borderRadius: BorderRadius.circular(10),
+            gradient: LinearGradient(
+              colors: [
+                AppColors.primaryPink.withValues(alpha: 0.35),
+                Colors.black.withValues(alpha: 0.55),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppColors.primaryPink.withValues(alpha: 0.65),
+              width: 1.5,
+            ),
             boxShadow: [
               BoxShadow(
-                color: AppColors.editGreen.withValues(alpha: 0.3),
-                blurRadius: 6,
+                color: AppColors.primaryPink.withValues(alpha: 0.3),
+                blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
             ],
           ),
-          child: const Icon(
-            Icons.add,
-            color: Colors.white,
-            size: 20,
+          child: const Center(
+            child: Icon(
+              Icons.add_rounded,
+              color: Color(0xFFFF6584),
+              size: 22,
+            ),
           ),
         ),
       ),
